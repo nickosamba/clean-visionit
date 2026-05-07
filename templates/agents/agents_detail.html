@@ -1,0 +1,194 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Agent — {{ agent.user.first_name }}{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+
+<!-- 🟩 HEADER PREMIUM -->
+<div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-200 mb-10 flex items-center gap-6">
+    {% if agent.photo_profile %}
+        <img src="{{ agent.photo_profile.url }}" class="w-24 h-24 rounded-full object-cover shadow-lg">
+    {% else %}
+        <div class="w-24 h-24 bg-slate-200 rounded-full flex items-center justify-center text-3xl font-bold text-slate-600 shadow-inner">
+            {{ agent.user.first_name|first }}{{ agent.user.last_name|first }}
+        </div>
+    {% endif %}
+
+    <div>
+        <h1 class="text-4xl font-bold text-emerald-700">{{ agent.user.first_name }} {{ agent.user.last_name }}</h1>
+        <p class="text-slate-500 text-sm">{{ agent.matricule }}</p>
+        <div class="mt-3">
+            {% if agent.statut == "Actif" %}
+                <span class="px-4 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold">Actif</span>
+            {% elif agent.statut == "Inactif" %}
+                <span class="px-4 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold">Inactif</span>
+            {% elif agent.statut == "Suspendu" %}
+                <span class="px-4 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-semibold">Suspendu</span>
+            {% else %}
+                <span class="px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">En congé</span>
+            {% endif %}
+        </div>
+    </div>
+    
+</div>
+
+<!-- 🟦 ONGLET NAVIGATION -->
+<div class="border-b border-slate-200 mb-6 flex space-x-4">
+  <button class="tab-btn px-4 py-2 font-semibold text-emerald-700 border-b-2 border-emerald-700" data-tab="profil">Profil</button>
+  <button class="tab-btn px-4 py-2 text-slate-600 hover:text-emerald-700" data-tab="stats">Stats</button>
+  <button class="tab-btn px-4 py-2 text-slate-600 hover:text-emerald-700" data-tab="clients">Clients</button>
+  <button class="tab-btn px-4 py-2 text-slate-600 hover:text-emerald-700" data-tab="tournees">Tournées</button>
+  <button class="tab-btn px-4 py-2 text-slate-600 hover:text-emerald-700" data-tab="incidents">Incidents</button>
+      <a href="{% url 'agents:export_pdf' agent.id %}"
+   class="tab-btn px-4 py-2 text-slate-600 hover:text-emerald-700">
+   📄 Exporter en PDF
+</a>
+<br><br>
+</div>
+<!-- 🟩 CONTENU ONGLET -->
+<div id="tab-profil" class="tab-content">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-200">
+      <h2 class="font-bold text-lg mb-4 text-slate-700">Informations personnelles</h2>
+      <p><b>Téléphone :</b> {{ agent.telephone_principal }}</p>
+      {% if agent.telephone_secondaire %}
+        <p><b>Secondaire :</b> {{ agent.telephone_secondaire }}</p>
+      {% endif %}
+      <p><b>Adresse :</b> {{ agent.adresse }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-200">
+      <h2 class="font-bold text-lg mb-4 text-slate-700">Informations professionnelles</h2>
+      <p><b>Secteur :</b> {{ agent.secteur.nom }}</p>
+      <p><b>Contrat :</b> {{ agent.type_contrat }}</p>
+      <p><b>Date d'embauche :</b> {{ agent.date_embauche }}</p>
+    </div>
+  </div>
+</div>
+
+<div id="tab-stats" class="tab-content hidden">
+  <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-200">
+    <h2 class="font-bold text-lg mb-4 text-slate-700">Statistiques</h2>
+    <p><b>Tournées :</b> {{ total_tournees }}</p>
+    <p><b>Clients servis :</b> {{ clients_servis }}</p>
+    <p><b>Incidents :</b> {{ incidents }}</p>
+    <p><b>Progression :</b> {{ progression }}%</p>
+    <div class="w-full max-w-xs mx-auto mt-6">
+      <canvas id="performanceChart" height="180"></canvas>
+    </div>
+  </div>
+</div>
+
+<div id="tab-clients" class="tab-content hidden">
+  <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-200">
+    <h2 class="font-bold text-lg mb-4 text-slate-700">Clients servis</h2>
+    <ul class="space-y-3">
+      {% for c in clients_points %}
+      <li class="p-4 bg-slate-50 rounded-xl border flex items-center justify-between">
+        <div>
+          <p class="font-semibold">{{ c.nom }}</p>
+          <p class="text-sm text-slate-500">{{ c.adresse }}</p>
+        </div>
+        <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Servi</span>
+      </li>
+      {% empty %}
+      <p class="text-slate-500">Aucun client servi.</p>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div id="tab-tournees" class="tab-content hidden">
+  <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-200">
+    <h2 class="font-bold text-lg mb-4 text-slate-700">Historique des tournées</h2>
+    <ul class="space-y-3">
+      {% for t in tournees %}
+      <li class="p-4 bg-slate-50 rounded-xl border hover:shadow-md transition">
+        <b class="text-emerald-700">{{ t.date }}</b> — {{ t.secteur.nom }}
+        <br>
+        <span class="text-sm text-slate-500">{{ t.clients.count }} clients</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div id="tab-incidents" class="tab-content hidden">
+  <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-200">
+    <h2 class="font-bold text-lg mb-4 text-red-600">Incidents signalés</h2>
+    {% if incidents_list %}
+      <ul class="space-y-4">
+        {% for tc in incidents_list %}
+        <li class="p-4 bg-red-50 border border-red-200 rounded-xl shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+              <i data-lucide="alert-triangle"></i>
+            </div>
+            <div>
+              <p class="font-bold">{{ tc.client.nom }}</p>
+              <p class="text-sm text-slate-600">
+                {{ tc.client.adresse_numero }}
+                {% if tc.client.rue %}
+                  {{ tc.client.rue.nom }}
+                {% else %}
+                  Rue inconnue
+                {% endif %}
+              </p>
+              <span class="text-xs text-red-700 font-semibold">Problème signalé</span>
+            </div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-slate-500">Aucun incident.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+new Chart(document.getElementById('performanceChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ["Servis", "Incidents"],
+        datasets: [{
+            data: [{{ clients_servis }}, {{ incidents }}],
+            backgroundColor: ["#10b981", "#ef4444"],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        cutout: "70%",
+        plugins: { legend: { display: false } }
+    }
+});
+
+// Gestion des onglets
+const tabs = document.querySelectorAll('.tab-btn');
+const contents = document.querySelectorAll('.tab-content');
+
+tabs.forEach(btn => {
+  btn.addEventListener('click', () => {
+    // Retirer style actif de tous les onglets
+    tabs.forEach(t => t.classList.remove('text-emerald-700','border-b-2','border-emerald-700','font-semibold'));
+    tabs.forEach(t => t.classList.add('text-slate-600'));
+
+    // Masquer tous les contenus
+    contents.forEach(c => c.classList.add('hidden'));
+
+    // Activer l’onglet cliqué
+    btn.classList.remove('text-slate-600');
+    btn.classList.add('text-emerald-700','border-b-2','border-emerald-700','font-semibold');
+
+    // Afficher le contenu correspondant
+    const tabId = btn.getAttribute('data-tab');
+    document.getElementById('tab-' + tabId).classList.remove('hidden');
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+{% load static %}
+<style>
+@page { size: A4; margin: 40px; }
+body { font-family: "Inter", sans-serif; font-size: 13px; }
+
+/* --- PAGE DE GARDE --- */
+.cover-banner {
+    width: 100%; height: 80px;
+    background: #059669;
+    position: absolute; top: 0; left: 0;
+}
+.cover { text-align: center; margin-top: 140px; position: relative; }
+.cover img { width: 150px; margin-bottom: 20px; }
+.cover-title { font-size: 32px; color: #059669; font-weight: bold; margin-bottom: 10px; }
+.cover-subtitle { font-size: 16px; color: #555; margin-bottom: 40px; }
+.cover-info { font-size: 15px; color: #666; }
+
+/* Séparation */
+.page-break { page-break-after: always; }
+
+/* --- PAGE 2 : Infos détaillées --- */
+h1 {
+    text-align: center;
+    color: #059669;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 20px;
+}
+
+th {
+    background: #f6f6f6;
+    color: #333;
+    padding: 8px;
+    text-align: left;
+    font-weight: 600;
+    width: 30%;
+}
+
+td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    color: #222;
+}
+
+tr:nth-child(even) td {
+    background: #fafafa;
+}
+
+.footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 11px;
+    color: #777;
+}
+</style>
+</head>
+<body>
+
+<!-- ✅ PAGE DE GARDE -->
+<div class="cover-banner"></div>
+<div class="cover">
+    <img src="{{ logo_path }}" alt="Logo">
+    <div class="cover-title">Dossier Agent</div>
+    <div class="cover-subtitle">Export généré automatiquement</div>
+    <div class="cover-info">
+        Date : {{ date }} <br>
+        Gestionnaire : {{ gestionnaire }} <br>
+        Agent : {{ agent.user.get_full_name }} <br>
+        Matricule : {{ agent.matricule }}
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ✅ PAGE 2 : Infos détaillées -->
+<h1>Informations de l'Agent</h1>
+<table>
+    <tr><th>Nom</th><td>{{ agent.user.last_name }}</td></tr>
+    <tr><th>Prénom</th><td>{{ agent.user.first_name }}</td></tr>
+    <tr><th>Email</th><td>{{ agent.user.email }}</td></tr>
+    <tr><th>Téléphone principal</th><td>{{ agent.telephone_principal }}</td></tr>
+    <tr><th>Téléphone secondaire</th><td>{{ agent.telephone_secondaire|default:"-" }}</td></tr>
+    <tr><th>Adresse</th><td>{{ agent.adresse|default:"-" }}</td></tr>
+    <tr><th>Secteur</th><td>{% if agent.secteur %}{{ agent.secteur.nom }}{% else %}-{% endif %}</td></tr>
+    <tr><th>Zone d'intervention</th><td>{{ agent.zone_intervention|default:"-" }}</td></tr>
+    <tr><th>Date d'embauche</th><td>{{ agent.date_embauche|date:"d/m/Y" }}</td></tr>
+    <tr><th>Type de contrat</th><td>{{ agent.type_contrat }}</td></tr>
+    <tr><th>Statut</th><td>{{ agent.statut }}</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ✅ PAGE 3 : Incidents liés à l'agent -->
+<h1>Incidents signalés</h1>
+{% if incidents %}
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Client</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for incident in incidents %}
+        <tr>
+            <td>{{ incident.date_signalement|date:"d/m/Y H:i" }}</td>
+            <td>{{ incident.type_incident }}</td>
+            <td>{% if incident.client %}{{ incident.client.full_name }}{% else %}-{% endif %}</td>
+            <td>{{ incident.description|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="text-align:center; color:#777;">Aucun incident signalé par cet agent.</p>
+{% endif %}
+
+<div class="footer">
+    CLEAN — Export PDF généré automatiquement
+</div>
+
+</body>
+</html>

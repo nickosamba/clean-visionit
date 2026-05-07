@@ -1,0 +1,124 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Détails de l’abonnement — CLEAN{% endblock %}
+
+{% block content %}
+
+<div class="p-6">
+
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 class="text-2xl font-bold text-emerald-600 flex items-center gap-2">
+            📜 Détails de l’abonnement
+        </h1>
+
+        <!-- Modifier l’abonnement -->
+        <a href="{% url 'abonnements:edit' abonnement.id %}"
+           class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition shadow">
+            <i data-lucide="pencil"></i> Modifier
+        </a>
+    </div>
+
+    <!-- Informations principales -->
+    <div class="bg-white p-6 rounded-2xl shadow-premium border mb-6">
+        <h2 class="text-xl font-semibold mb-4 text-slate-800">ℹ️ Informations</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-700">
+            <p><strong>Nom :</strong> {{ abonnement.nom }}</p>
+            <p><strong>Montant de base :</strong> <span class="text-emerald-700 font-semibold">{{ abonnement.montant_base }} FCFA</span></p>
+            <p><strong>Description :</strong> {{ abonnement.description|default:"-" }}</p>
+            <p><strong>Avantages :</strong> {{ abonnement.avantages|default:"-" }}</p>
+            <p><strong>Date de création :</strong> {{ abonnement.created_at|date:"d/m/Y" }}</p>
+        </div>
+    </div>
+
+    <!-- Options de service -->
+    <div class="bg-white p-6 rounded-2xl shadow-premium border mb-6">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
+            <h2 class="text-xl font-semibold text-slate-800">⚙️ Options de service</h2>
+
+            <!-- Ajouter une option -->
+            <a href="{% url 'abonnements:create_option' abonnement.id %}"
+               class="w-full sm:w-auto px-3 py-2 bg-emerald-600 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition shadow">
+                <i data-lucide="plus"></i> Ajouter une option
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full border-collapse text-sm sm:text-base">
+                <thead>
+                    <tr class="bg-emerald-600 text-white">
+                        <th class="p-3 text-left">Nom</th>
+                        <th class="p-3 text-left">Prix</th>
+                        <th class="p-3 text-left">Description</th>
+                        <th class="p-3 text-left">Statut</th>
+                        <th class="p-3 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for opt in options %}
+                    <tr class="border-b hover:bg-slate-50 transition">
+                        <td class="p-3">{{ opt.nom }}</td>
+                        <td class="p-3">{{ opt.prix_supplementaire }} FCFA</td>
+                        <td class="p-3">{{opt.description}}</td>
+                        <td class="p-3">
+                            {% if opt.statut == "Active" %}
+                                <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs">Active</span>
+                            {% else %}
+                                <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 flex flex-wrap gap-2">
+                            <a href="{% url 'abonnements:edit_option' opt.id %}" 
+                               class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 flex items-center gap-1 text-sm">
+                                <i data-lucide="pencil"></i> Modifier
+                            </a>
+                            <a href="{% url 'abonnements:delete_option' opt.id %}" 
+                               class="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1 text-sm"
+                               onclick="return confirm('Voulez-vous vraiment supprimer cette option ?');">
+                                <i data-lucide="trash"></i> Supprimer
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="p-4 text-center text-slate-500">Aucune option.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Historique des tarifs -->
+    <div class="bg-white p-6 rounded-2xl shadow-premium border">
+        <h2 class="text-xl font-semibold mb-4 text-slate-800">💰 Historique des tarifs</h2>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full border-collapse text-sm sm:text-base">
+                <thead>
+                    <tr class="bg-slate-700 text-white">
+                        <th class="p-3 text-left">Ancien montant</th>
+                        <th class="p-3 text-left">Nouveau montant</th>
+                        <th class="p-3 text-left">Date</th>
+                        <th class="p-3 text-left">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in historique %}
+                    <tr class="border-b hover:bg-slate-50 transition">
+                        <td class="p-3">{{ h.ancien_montant|default:"-" }}</td>
+                        <td class="p-3 text-emerald-700 font-semibold">{{ h.nouveau_montant }}</td>
+                        <td class="p-3">{{ h.date_changement|date:"d/m/Y" }}</td>
+                        <td class="p-3">{{ h.note|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="p-4 text-center text-slate-500">Aucun historique.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>lucide.createIcons()</script>
+
+{% endblock %}

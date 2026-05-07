@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Reçu Paiement - CLEAN Comptabilité</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 40px; color: #333; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .header h1 { font-size: 32px; color: #059669; margin: 0; }
+    .header p { font-size: 14px; color: #555; }
+    .section { margin-bottom: 30px; }
+    .section h2 { font-size: 18px; color: #059669; border-bottom: 2px solid #059669; padding-bottom: 5px; }
+    .details { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .details td { padding: 8px; border-bottom: 1px solid #ddd; }
+    .summary { background: #f9fafb; padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-top: 20px; }
+    .summary p { margin: 5px 0; font-size: 15px; }
+    .signature { margin-top: 60px; text-align: right; }
+    .signature p { font-size: 14px; }
+    .footer { text-align: center; font-size: 12px; color: #777; margin-top: 50px; }
+  </style>
+</head>
+<body>
+
+  <!-- 🟢 En-tête -->
+  <div class="header">
+    <h1>Reçu de Paiement</h1>
+    <p>CLEAN Comptabilité — {{ paiement.date_paiement|date:"d/m/Y" }}</p>
+  </div>
+
+  <!-- 👤 Infos Client -->
+  <div class="section">
+    <h2>Informations Client</h2>
+    <table class="details">
+      <tr>
+        <td>Nom du client :</td>
+        <td><strong>{{ paiement.echeance.client.nom }}</strong></td>
+      </tr>
+      <tr>
+        <td>Période :</td>
+        <td>{{ paiement.echeance.periode }}</td>
+      </tr>
+      <tr>
+        <td>Type d’échéance :</td>
+        <td>{{ paiement.echeance.type_echeance }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 💰 Détails Paiement -->
+  <div class="section">
+    <h2>Détails du Paiement</h2>
+    <table class="details">
+      <tr>
+        <td>Montant dû :</td>
+        <td>{{ paiement.echeance.montant_du|floatformat:0 }} FCFA</td>
+      </tr>
+      <tr>
+        <td>Montant payé :</td>
+        <td><strong>{{ paiement.montant_paye|floatformat:0 }} FCFA</strong></td>
+      </tr>
+      <tr>
+        <td>Mode de paiement :</td>
+        <td>{{ paiement.mode_paiement }}</td>
+      </tr>
+      <tr>
+        <td>Référence transaction :</td>
+        <td>{{ paiement.reference_transaction|default:"N/A" }}</td>
+      </tr>
+      <tr>
+        <td>Numéro de reçu :</td>
+        <td>{{ paiement.recus.last.numero_recu }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 📊 Résumé -->
+  <div class="summary">
+    <p><strong>Montant dû :</strong> {{ paiement.echeance.montant_du|floatformat:0 }} FCFA</p>
+    <p><strong>Total payé :</strong> {{ paiement.echeance.total_paye|floatformat:0 }} FCFA</p>
+    <p><strong>Reste à payer :</strong> {{ paiement.echeance.reste_a_payer|floatformat:0 }} FCFA</p>
+  </div>
+
+  <!-- ✍ Signature -->
+  <div class="signature">
+    <p>Signature comptable :</p>
+    <p><strong>{{ paiement.recus.last.signature_comptable }}</strong></p>
+  </div>
+
+  <!-- 📌 Footer -->
+  <div class="footer">
+    <p>Ce reçu est généré automatiquement par CLEAN Comptabilité.<br>
+    Merci pour votre confiance.</p>
+  </div>
+
+</body>
+</html>

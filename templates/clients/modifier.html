@@ -1,0 +1,142 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Modifier le client{% endblock %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-8">Modifier le client</h1>
+
+<div class="bg-white p-8 rounded-2xl shadow-premium border border-slate-200 max-w-5xl mx-auto">
+
+    <form method="POST" class="space-y-10">
+        {% csrf_token %}
+
+        <!-- SECTION : Informations personnelles -->
+        <div>
+            <h2 class="text-xl font-semibold mb-4 text-emerald-700">Informations personnelles</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.prenom.label }}</label>
+                    {{ form.prenom }}
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.nom.label }}</label>
+                    {{ form.nom }}
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block font-medium mb-1">{{ form.email.label }}</label>
+                    {{ form.email }}
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.telephone_principal.label }}</label>
+                    {{ form.telephone_principal }}
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.telephone_secondaire.label }}</label>
+                    {{ form.telephone_secondaire }}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SECTION : Adresse -->
+        <div>
+            <h2 class="text-xl font-semibold mb-4 text-emerald-700">Adresse</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.adresse_numero.label }}</label>
+                    {{ form.adresse_numero }}
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block font-medium mb-1">{{ form.rue.label }}</label>
+                    {{ form.rue }}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SECTION : Abonnement -->
+        <div>
+            <h2 class="text-xl font-semibold mb-4 text-emerald-700">Abonnement</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.abonnement.label }}</label>
+                    {{ form.abonnement }}
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.montant_mensuel.label }}</label>
+                    {{ form.montant_mensuel }}
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.date_debut.label }}</label>
+                    {{ form.date_debut }}
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.date_recouvrement.label }}</label>
+                    {{ form.date_recouvrement }}
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.statut.label }}</label>
+                    {{ form.statut }}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SECTION : Localisation GPS -->
+        <div>
+            <h2 class="text-xl font-semibold mb-4 text-emerald-700">Localisation GPS (optionnel)</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.gps_lat.label }}</label>
+                    {{ form.gps_lat }}
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">{{ form.gps_lon.label }}</label>
+                    {{ form.gps_lon }}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SECTION : Commentaires -->
+        <div>
+            <h2 class="text-xl font-semibold mb-4 text-emerald-700">Commentaires</h2>
+            {{ form.commentaires }}
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="flex justify-end gap-4">
+            <a href="{% url 'clients:details' client.id %}"
+               class="px-5 py-2 bg-slate-200 rounded-lg hover:bg-slate-300">
+                Annuler
+            </a>
+
+            <button type="submit"
+                    class="px-6 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700">
+                Enregistrer
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base_comptable.html" %}
+{% block title %}Paiement - CLEAN Comptabilité{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Paiement de l'Échéance</h1>
+
+<div class="bg-white rounded-xl shadow p-6 max-w-lg">
+  <p class="mb-4 text-slate-600">
+    Client : <span class="font-semibold">{{ echeance.client.nom }}</span><br>
+    Montant dû : <span class="font-semibold">{{ echeance.montant_du }} FCFA</span><br>
+    Période : <span class="font-semibold">{{ echeance.periode }}</span>
+  </p>
+
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+
+    <!-- Montant payé -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700">Montant payé</label>
+      <input type="number" name="montant" step="0.01" required
+             class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+    </div>
+
+    <!-- Mode de paiement -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700">Mode de paiement</label>
+      <select name="mode" required
+              class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+        {% for value, label in modes %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Bouton valider -->
+    <div class="flex justify-end">
+      <button type="submit"
+              class="px-4 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700">
+        💳 Valider le paiement
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

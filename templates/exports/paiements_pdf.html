@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+{% load static %}
+<style>
+@page { size: A4; margin: 40px; }
+body { font-family: "Inter", sans-serif; font-size: 13px; }
+
+/* --- PAGE DE GARDE --- */
+.cover-banner {
+    width: 100%; height: 80px;
+    background: #059669;
+    position: absolute; top: 0; left: 0;
+}
+.cover { text-align: center; margin-top: 140px; position: relative; }
+.cover img { width: 150px; margin-bottom: 20px; }
+.cover-title { font-size: 32px; color: #059669; font-weight: bold; margin-bottom: 10px; }
+.cover-subtitle { font-size: 16px; color: #555; margin-bottom: 40px; }
+.cover-info { font-size: 15px; color: #666; }
+
+/* Séparation */
+.page-break { page-break-after: always; }
+
+/* --- PAGE 2 : Tableau --- */
+h1 {
+    text-align: center;
+    color: #059669;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 20px;
+}
+
+th {
+    background: #059669;
+    color: white;
+    padding: 8px;
+    text-align: left;
+}
+
+td {
+    padding: 6px;
+    border-bottom: 1px solid #ddd;
+    color: #222;
+}
+
+tr:nth-child(even) td {
+    background: #f6f6f6;
+}
+
+tfoot td {
+    font-weight: bold;
+    background: #f0f0f0;
+}
+
+.footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 11px;
+    color: #777;
+}
+</style>
+</head>
+<body>
+
+<!-- ✅ PAGE DE GARDE -->
+<div class="cover-banner"></div>
+<div class="cover">
+    <img src="{{ logo_path }}" alt="Logo">
+    <div class="cover-title">Rapport des Paiements</div>
+    <div class="cover-subtitle">Export généré automatiquement</div>
+    <div class="cover-info">
+        Date : {{ date }} <br>
+        Gestionnaire : {{ gestionnaire }}
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ✅ PAGE 2 : Tableau des paiements -->
+<h1>Liste des Paiements</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Client</th>
+            <th>Montant payé</th>
+            <th>Mode</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in paiements %}
+        <tr>
+            <td>{{ p.echeance.client.full_name }}</td>
+            <td>{{ p.montant_paye|floatformat:0 }} FCFA</td>
+            <td>{{ p.mode_paiement }}</td>
+            <td>{{ p.date_paiement|date:"d/m/Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" style="text-align:center; color:#777;">Aucun paiement enregistré.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="4" style="text-align:right;">Total : {{ total_montant|floatformat:0 }} FCFA</td>
+        </tr>
+    </tfoot>
+</table>
+
+<div class="footer">
+    CLEAN — Export PDF généré automatiquement
+</div>
+
+</body>
+</html>

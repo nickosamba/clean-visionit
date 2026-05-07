@@ -1,0 +1,37 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Supprimer agent{% endblock %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-6">Supprimer un agent</h1>
+
+<div class="bg-white p-8 rounded-2xl shadow border border-slate-200 max-w-xl mx-auto">
+
+  <p class="text-lg mb-6">
+    Voulez-vous vraiment supprimer l’agent  
+    <b>{{ agent.user.first_name }} {{ agent.user.last_name }}</b> ?
+  </p>
+
+  <p class="text-slate-600 mb-6">
+    Cette action supprimera également son compte utilisateur.
+  </p>
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <div class="flex justify-end gap-4">
+      <a href="{% url 'agents:liste' %}"
+         class="px-4 py-2 bg-slate-200 rounded-lg hover:bg-slate-300">
+        Annuler
+      </a>
+
+      <button type="submit"
+              class="px-6 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700">
+        Supprimer
+      </button>
+    </div>
+  </form>
+
+</div>
+
+{% endblock %}

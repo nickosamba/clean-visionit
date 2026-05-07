@@ -1,0 +1,150 @@
+{% extends "base_comptable.html" %}
+{% block title %}Paiements - CLEAN Comptabilité{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl md:text-3xl font-bold mb-6">Suivi des Paiements</h1>
+<p class="text-slate-500 mb-8">Liste des paiements enregistrés — {{ today|date:"d/m/Y" }}</p>
+
+<!-- 🔹 Filtres -->
+<div class="mb-6 flex gap-4">
+  <form method="get" class="flex gap-2">
+    <select name="mode" class="border rounded px-2 py-1">
+      <option value="">Tous les modes</option>
+      <option value="Espèces">Espèces</option>
+      <option value="Mobile Money">Mobile Money</option>
+      <option value="Virement">Virement</option>
+    </select>
+    <select name="periode" class="border rounded px-2 py-1">
+      <option value="">Toutes périodes</option>
+      <option value="semaine">Cette semaine</option>
+      <option value="mois">Ce mois</option>
+    </select>
+    <button class="px-4 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700">Filtrer</button>
+  </form>
+    <a href="{% url 'dashboard:export_pdf' %}"
+    class="px-5 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700">
+    📄 Exporter rapport PDF
+  </a>
+
+</div>
+
+<!-- 🔢 Compteurs -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div class="bg-white shadow rounded-xl p-4 text-center">
+    <p class="text-sm text-slate-500">Total paiements</p>
+    <p class="text-xl md:text-2xl font-bold text-slate-700">{{ total_global }}</p>
+    <p class="text-xs text-slate-400">Montant : {{ total_montant|floatformat:0 }} FCFA</p>
+  </div>
+  <div class="bg-white shadow rounded-xl p-4 text-center">
+    <p class="text-sm text-slate-500">Espèces</p>
+    <p class="text-xl md:text-2xl font-bold text-emerald-600">{{ total_especes }}</p>
+    <p class="text-xs text-slate-400">Montant : {{ total_montant_especes|floatformat:0 }} FCFA</p>
+  </div>
+  <div class="bg-white shadow rounded-xl p-4 text-center">
+    <p class="text-sm text-slate-500">Mobile Money</p>
+    <p class="text-xl md:text-2xl font-bold text-blue-600">{{ total_mobile }}</p>
+    <p class="text-xs text-slate-400">Montant : {{ total_montant_mobile|floatformat:0 }} FCFA</p>
+  </div>
+  <div class="bg-white shadow rounded-xl p-4 text-center">
+    <p class="text-sm text-slate-500">Virement</p>
+    <p class="text-xl md:text-2xl font-bold text-amber-600">{{ total_virement }}</p>
+    <p class="text-xs text-slate-400">Montant : {{ total_montant_virement|floatformat:0 }} FCFA</p>
+  </div>
+</div>
+
+<!-- 📊 Graphique Donut -->
+<div class="bg-white rounded-2xl shadow p-6 mb-8 flex justify-center">
+  <div class="w-full max-w-xs">
+    <h2 class="text-lg md:text-xl font-semibold mb-4 text-center">Répartition des Paiements</h2>
+    <canvas id="paiementsChart" class="w-40 h-40 md:w-56 md:h-56 mx-auto"></canvas>
+  </div>
+</div>
+
+<!-- 📋 Tableau des paiements -->
+<div class="bg-white rounded-2xl shadow p-6">
+  <div class="overflow-x-auto">
+    <table class="min-w-full border-collapse text-sm md:text-base">
+      <thead>
+        <tr class="bg-emerald-600 text-white">
+          <th class="p-3 text-left">Client</th>
+          <th class="p-3 text-left">Montant payé</th>
+          <th class="p-3 text-left">Mode</th>
+          <th class="p-3 text-left">Date</th>
+          <th class="p-3 text-left">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in paiements %}
+        <tr class="border-b hover:bg-gray-50">
+          <td class="p-3">{{ p.echeance.client.nom }}</td>
+          <td class="p-3">{{ p.montant_paye|floatformat:0 }} FCFA</td>
+          <td class="p-3">{{ p.mode_paiement }}</td>
+          <td class="p-3">{{ p.date_paiement|date:"d/m/Y" }}</td>
+          <td class="p-3">
+            <a href="{% url 'dashboard:recu_pdf' p.id %}" 
+               class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs md:text-sm hover:bg-emerald-700">
+              📄 Télécharger reçu
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="p-4 text-center text-slate-500">Aucun paiement enregistré.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <!-- 🔹 Ligne de total -->
+      <tfoot>
+        <tr class="bg-gray-100 font-semibold">
+          <td class="p-3 text-right" colspan="5">
+            Total affiché : {{ total_montant|floatformat:0 }} FCFA
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+    <!-- 🔹 Pagination -->
+      <div class="mt-4 flex justify-center gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}" 
+            class="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300">⬅ Précédent</a>
+        {% endif %}
+
+        <span class="px-3 py-1 bg-slate-100 rounded">
+          Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}" 
+            class="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300">Suivant ➡</a>
+        {% endif %}
+      </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('paiementsChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Espèces', 'Mobile Money', 'Virement'],
+      datasets: [{
+        data: [{{ total_especes }}, {{ total_mobile }}, {{ total_virement }}],
+        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 1,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 12 } } }
+      }
+    }
+  });
+</script>
+{% endblock %}

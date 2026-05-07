@@ -1,0 +1,151 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Détail de la tournée — CLEAN{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-8">
+
+    <!-- 🟩 CARTE EN-TÊTE -->
+    <div class="bg-white shadow-premium rounded-xl p-6 border border-slate-200">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-emerald-600">Tournée #{{ tournee.id }}</h1>
+
+                <p class="text-slate-600 mt-1">
+                    <span class="font-semibold">{{ tournee.date }}</span> — {{ tournee.secteur.nom }}
+                </p>
+
+                <p class="text-slate-600">
+                    Agent :
+                    <span class="font-semibold">
+                        {{ tournee.agent.user.first_name }} {{ tournee.agent.user.last_name }}
+                    </span>
+                </p>
+
+                <!-- Badge statut -->
+                <span class="inline-block mt-2 px-3 py-1 text-xs font-semibold rounded-full
+                    {% if tournee.statut == 'Planifié' %} bg-yellow-100 text-yellow-800
+                    {% elif tournee.statut == 'Terminé' %} bg-emerald-100 text-emerald-800
+                    {% else %} bg-slate-200 text-slate-700 {% endif %}">
+                    {{ tournee.statut }}
+                </span>
+
+                <!-- Heures -->
+                <div class="mt-3 space-y-1 text-slate-600">
+                    {% if tournee.heure_debut %}
+                        <p>Heure début : <span class="font-semibold">{{ tournee.heure_debut }}</span></p>
+                    {% endif %}
+                    {% if tournee.heure_fin %}
+                        <p>Heure fin : <span class="font-semibold">{{ tournee.heure_fin }}</span></p>
+                    {% endif %}
+                    {% if tournee.vehicule %}
+                        <p>Véhicule : <span class="font-semibold">{{ tournee.vehicule }}</span></p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Icône -->
+            <div class="hidden md:flex w-20 h-20 bg-emerald-50 rounded-xl items-center justify-center">
+                <i data-lucide="route" class="w-10 h-10 text-emerald-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🟦 ACTIONS -->
+    <div class="flex flex-wrap gap-3">
+        <a href="{% url 'tournees:edit' tournee.id %}"
+           class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 flex items-center gap-2">
+            <i data-lucide="pencil" class="w-4 h-4"></i> Modifier
+        </a>
+
+        <a href="{% url 'tournees:delete' tournee.id %}"
+           class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 flex items-center gap-2"
+           onclick="return confirm('Supprimer cette tournée ?');">
+            <i data-lucide="trash" class="w-4 h-4"></i> Supprimer
+        </a>
+
+        <a href="{% url 'tournees:add_client' tournee.id %}"
+           class="px-4 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700 flex items-center gap-2">
+            <i data-lucide="user-plus" class="w-4 h-4"></i> Ajouter un client
+        </a>
+
+        <form action="{% url 'tournees:add_sector_clients' tournee.id %}" method="post" class="inline">
+            {% csrf_token %}
+            <button type="submit" 
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition flex items-center gap-2"
+                    onclick="return confirm('Ajouter tous les clients actifs du secteur {{ tournee.secteur.nom }} non encore planifiés aujourd\'hui ?');">
+                <i data-lucide="users" class="w-4 h-4"></i> Importer tout le secteur
+            </button>
+        </form>
+    </div>
+
+    <!-- 🟧 TABLEAU CLIENTS -->
+    <div class="bg-white shadow-premium rounded-xl border border-slate-200 overflow-x-auto">
+        <table class="w-full table-fixed text-sm min-w-[850px]">
+            <thead>
+                <tr class="bg-emerald-600 text-white">
+                    <th class="p-3 w-32 text-left">Code Client</th>
+                    <th class="p-3 w-48 text-left">Nom</th>
+                    <th class="p-3 w-40 text-left">Statut Service</th>
+                    <th class="p-3 w-40 text-left">Heure Passage</th>
+                    <th class="p-3 text-left">Commentaires</th>
+                    <th class="p-3 w-56 text-left">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for tc in clients %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 align-middle">{{ tc.client.code_client }}</td>
+                    <td class="p-3 align-middle">{{ tc.client.nom }}</td>
+
+                    <!-- Badge statut service -->
+                    <td class="p-3 align-middle">
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold
+                            {% if tc.statut_service == 'Servi' %} bg-emerald-100 text-emerald-800
+                            {% elif tc.statut_service == 'Absent' %} bg-red-100 text-red-800
+                            {% else %} bg-slate-200 text-slate-700 {% endif %}">
+                            {{ tc.statut_service }}
+                        </span>
+                    </td>
+
+                    <td class="p-3 align-middle">
+                        {% if tc.heure_passage %}
+                            {{ tc.heure_passage }}
+                        {% else %}
+                            <span class="text-slate-400 italic">Non défini</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="p-3 align-middle">
+                        {{ tc.commentaires_agent|default:"—" }}
+                    </td>
+
+                    <td class="p-3 align-middle w-56">
+                        <div class="flex flex-wrap gap-2">
+                            <a href="{% url 'tournees:edit_client' tc.id %}"
+                               class="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm">
+                                <i data-lucide="pencil" class="w-4 h-4"></i> Modifier
+                            </a>
+
+                            <a href="{% url 'tournees:delete_client' tc.id %}"
+                               class="text-red-600 hover:text-red-800 flex items-center gap-1 text-sm"
+                               onclick="return confirm('Supprimer ce client de la tournée ?');">
+                                <i data-lucide="trash" class="w-4 h-4"></i> Supprimer
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-6 text-center text-slate-500">
+                        Aucun client associé à cette tournée.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base_agent.html" %}
+{% block title %}Profil Agent{% endblock %}
+
+{% block content %}
+
+<header class="text-center mb-8 pt-8">
+    <div class="relative inline-block">
+        {% if agent.photo_profile %}
+            <!-- Afficher la photo de profil -->
+            <img src="{{ agent.photo_profile.url }}" alt="Photo de profil"
+                 class="w-24 h-24 rounded-full mx-auto border-4 border-white shadow-lg object-cover">
+        {% else %}
+            <!-- Fallback : initiales -->
+            <div class="w-24 h-24 bg-emerald-600 rounded-full mx-auto flex items-center justify-center text-white text-3xl font-bold border-4 border-white shadow-lg">
+                {{ agent.user.first_name|slice:":1" }}{{ agent.user.last_name|slice:":1" }}
+            </div>
+        {% endif %}
+
+        <!-- Formulaire upload relié à l'icône caméra -->
+        <form method="POST" enctype="multipart/form-data" >
+            {% csrf_token %}
+            <input type="file" name="photo_profile" id="photoInput"
+                accept="image/*" class="hidden"
+                onchange="this.form.submit()">
+            <label for="photoInput"
+                class="bg-white p-2 absolute bottom-0 right-0 rounded-full shadow-md text-emerald-600 border border-slate-100 cursor-pointer hover:bg-emerald-50 transition">
+                <i data-lucide="camera" class="w-4 h-4"></i>
+            </label>
+        </form>
+    </div>
+
+    <h1 class="text-2xl font-bold text-slate-900 mt-4">
+        {{ agent.user.first_name }} {{ agent.user.last_name }}
+    </h1>
+    <p class="text-slate-500 font-medium">
+        Agent de Terrain - {{ agent.secteur.nom }}
+    </p>
+</header>
+<!-- SECTION : Informations personnelles -->
+<div class="bg-white p-5 rounded-2xl shadow border border-slate-100 mb-6">
+    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Informations personnelles</h2>
+
+    <div class="space-y-4">
+
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-slate-50 rounded-lg text-slate-400">
+                    <i data-lucide="badge-check" class="w-5 h-5"></i>
+                </div>
+                <span class="font-medium">Matricule</span>
+            </div>
+            <span class="text-slate-700 font-mono">{{ agent.matricule }}</span>
+        </div>
+
+        <div class="flex justify-between items-center border-t pt-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-slate-50 rounded-lg text-slate-400">
+                    <i data-lucide="mail" class="w-5 h-5"></i>
+                </div>
+                <span class="font-medium">Email</span>
+            </div>
+            <span class="text-slate-700">{{ agent.user.email }}</span>
+        </div>
+
+        <div class="flex justify-between items-center border-t pt-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-slate-50 rounded-lg text-slate-400">
+                    <i data-lucide="phone" class="w-5 h-5"></i>
+                </div>
+                <span class="font-medium">Téléphone</span>
+            </div>
+            <span class="text-slate-700">{{ agent.telephone_principal }}</span>
+        </div>
+
+        <div class="flex justify-between items-center border-t pt-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-slate-50 rounded-lg text-slate-400">
+                    <i data-lucide="map-pin" class="w-5 h-5"></i>
+                </div>
+                <span class="font-medium">Zone d’intervention</span>
+            </div>
+            <span class="text-slate-700">{{ agent.zone_intervention }}</span>
+        </div>
+
+        <div class="flex justify-between items-center border-t pt-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-slate-50 rounded-lg text-slate-400">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                </div>
+                <span class="font-medium">Date d’embauche</span>
+            </div>
+            <span class="text-slate-700">{{ agent.date_embauche }}</span>
+        </div>
+
+    </div>
+</div>
+
+<!-- SECTION : Statistiques -->
+<div class="bg-white p-5 rounded-2xl shadow border border-slate-100 mb-6">
+    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Statistiques mensuelles</h2>
+
+    <div class="grid grid-cols-2 gap-4">
+        <div class="text-center p-4 bg-slate-50 rounded-xl">
+            <p class="text-3xl font-bold text-emerald-600">{{ stats.passages }}</p>
+            <p class="text-[11px] text-slate-500 font-bold uppercase">Passages</p>
+        </div>
+
+        <div class="text-center p-4 bg-slate-50 rounded-xl">
+            <p class="text-3xl font-bold text-emerald-600">{{ stats.assiduite }}%</p>
+            <p class="text-[11px] text-slate-500 font-bold uppercase">Assiduité</p>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION : Actions -->
+<div class="space-y-3">
+    
+        <a href="{% url 'logout' %}"
+           class="w-full py-4 bg-white text-rose-600 border border-rose-200 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-rose-50 transition">
+            <i data-lucide="log-out" class="w-5 h-5"></i> Déconnexion
+        </a>
+
+    <a href="{% url 'dashboard:agent' %}"
+       class="w-full py-4 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-50 transition">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i> Retour au Dashboard
+    </a>
+
+</div>
+<br><br><br>
+
+{% endblock %}

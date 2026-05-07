@@ -1,0 +1,128 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Détails du client{% endblock %}
+
+{% block content %}
+
+<!-- HEADER -->
+<div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+  <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-2">
+    👤 Détails du client
+  </h1>
+  <div class="flex flex-wrap gap-3">
+    <a href="{% url 'clients:update' client.id %}"
+       class="px-5 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700">
+       ✏️ Modifier
+    </a>
+    <a href="{% url 'clients:delete' client.id %}"
+       class="px-5 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700">
+       🗑️ Supprimer
+    </a>
+  </div>
+</div>
+
+<!-- CARD PRINCIPALE -->
+<div class="bg-white p-8 rounded-2xl shadow-premium border border-slate-200 max-w-5xl mx-auto">
+
+  <!-- Informations principales -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+
+    <!-- Avatar -->
+    <div class="flex items-center gap-4 col-span-2 mb-6">
+      {% if client.photo %}
+        <img src="{{ client.photo.url }}" class="w-20 h-20 rounded-full shadow-md object-cover">
+      {% else %}
+        <div class="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-600">
+          {{ client.nom|first }}{{ client.prenom|first }}
+        </div>
+      {% endif %}
+      <div>
+        <p class="text-sm text-slate-500">Nom complet</p>
+        <p class="text-xl font-semibold">{{ client.nom|upper }} {{ client.prenom|title }}</p>
+        <span class="px-3 py-1 rounded-full text-sm
+          {% if client.statut == 'Actif' %} bg-emerald-100 text-emerald-700
+          {% elif client.statut == 'Suspendu' %} bg-yellow-100 text-yellow-700
+          {% else %} bg-red-100 text-red-700 {% endif %}">
+          {{ client.statut }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Infos -->
+    <div>
+      <p class="text-sm text-slate-500">Code client</p>
+      <p class="text-lg font-semibold">{{ client.code_client }}</p>
+    </div>
+
+    <div>
+      <p class="text-sm text-slate-500">Téléphone principal</p>
+      <p class="text-lg font-semibold">{{ client.telephone_principal }}</p>
+    </div>
+
+    <div>
+      <p class="text-sm text-slate-500">Téléphone secondaire</p>
+      <p class="text-lg font-semibold">{{ client.telephone_secondaire|default:"-" }}</p>
+    </div>
+
+    <div>
+      <p class="text-sm text-slate-500">Email</p>
+      <p class="text-lg font-semibold">{{ client.email|default:"-" }}</p>
+    </div>
+
+    <div>
+      <p class="text-sm text-slate-500 ">Rue</p>
+      <p class="text-lg font-semibold">{{client.adresse_numero}} {{ client.rue.nom|title }}</p>
+    </div>
+    <div>
+      <p class="text-sm text-slate-500">Secteur</p>
+      <p class="text-lg font-semibold">{{ client.rue.secteur|title }}</p>
+    </div>
+
+    <div>
+      <p class="text-sm text-slate-500">Abonnement</p>
+      <p class="text-lg font-semibold">{{ client.abonnement.nom }}</p>
+    </div>
+
+    <div>
+      <p class="text-sm text-slate-500">Montant mensuel</p>
+      <p class="text-lg font-semibold text-emerald-700">{{ client.montant_mensuel }} FCFA</p>
+    </div>
+  </div>
+
+  <!-- Commentaires -->
+  <div class="mb-10">
+    <h2 class="text-xl font-semibold mb-2 text-slate-800">📝 Commentaires</h2>
+    <p class="text-slate-700">{{ client.commentaires|default:"Aucun commentaire." }}</p>
+  </div>
+
+  <!-- Actions secondaires -->
+  <div class="flex flex-wrap justify-end gap-3">
+    <a href="{% url 'clients:liste' %}"
+       class="px-5 py-2 bg-slate-200 text-white rounded-lg shadow hover:bg-slate-300">
+       🔙 Retour à la liste
+    </a>
+
+    <a href="{% url 'clients:export_pdf' client.id %}"
+      class="px-5 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700">
+      📄 Exporter en PDF
+    </a>
+
+
+  </div>
+
+</div>
+
+<script>
+function toggleExportMenu() {
+  const menu = document.getElementById("exportMenu");
+  menu.classList.toggle("hidden");
+}
+document.addEventListener("click", function(event) {
+  const menu = document.getElementById("exportMenu");
+  const button = event.target.closest("button");
+  if (!event.target.closest("#exportMenu") && !button) {
+    menu.classList.add("hidden");
+  }
+});
+</script>
+
+{% endblock %}

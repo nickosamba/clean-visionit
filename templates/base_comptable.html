@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CLEAN - Dashboard Comptable{% endblock %}</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+    h1, h2, h3 { font-family: 'Outfit', sans-serif; }
+    .sidebar-item { transition: all .25s ease; border-radius: .6rem; }
+    .sidebar-item:hover { background-color: rgba(16,185,129,0.12); color:#059669; transform: translateX(4px); }
+    .sidebar-item.active { background-color: rgba(16,185,129,0.15); color:#059669; font-weight:600; border-left:4px solid #059669; transform: translateX(4px); }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="flex min-h-screen overflow-x-hidden">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="w-64 bg-white shadow border-r border-slate-200 flex flex-col fixed h-full transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-50">
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">C</div>
+        <span class="text-xl font-bold tracking-tight">CLEAN Comptabilité</span>
+      </div>
+      <!-- Bouton croix (mobile) -->
+      <button id="closeSidebarBtn" class="md:hidden p-2 rounded-lg hover:bg-gray-200 transition">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+    </div>
+
+    <nav class="flex-1 p-4 space-y-2">
+      <a href="{% url 'dashboard:comptable' %}" class="sidebar-item flex items-center gap-3 px-4 py-3 text-slate-600">
+        <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+      </a>
+      <a href="{% url 'dashboard:echeances' %}" class="sidebar-item flex items-center gap-3 px-4 py-3 text-slate-600">
+        <i data-lucide="calendar"></i><span>Échéances</span>
+      </a>
+      <a href="{% url 'dashboard:paiements' %}" class="sidebar-item flex items-center gap-3 px-4 py-3 text-slate-600">
+        <i data-lucide="credit-card"></i><span>Paiements</span>
+      </a>
+      <a href="{% url 'dashboard:recu_list' %}" class="sidebar-item flex items-center gap-3 px-4 py-3 text-slate-600">
+        <i data-lucide="file-text"></i><span>Reçus</span>
+      </a>
+      <!-- ✅ Nouveau bouton Gestion Salaires -->
+       <a href="{% url 'dashboard:salaires' %}" class="sidebar-item flex items-center gap-3 px-4 py-3 text-slate-600"> 
+        <i data-lucide="users"></i><span>Gestion Salaires</span> 
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-slate-100 bg-slate-50">
+      <!-- ✅ Bouton déconnexion visible sur mobile -->
+      <a href="{% url 'logout' %}"
+        class="mt-4 flex md:hidden px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition gap-2">
+        <i data-lucide="log-out"></i> Déconnexion
+      </a>
+      <div class="flex items-center gap-3 p-2">
+        <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold">GS</div>
+        <div>
+          <p class="text-sm font-semibold">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+          <p class="text-xs text-slate-500">{{ request.user.role }}</p>
+        </div>
+      </div>
+
+  
+    </div>
+  </aside>
+
+  <!-- Overlay mobile -->
+  <div id="overlay" class="fixed inset-0 bg-black bg-opacity-40 hidden md:hidden z-40 transition-opacity duration-300"></div>
+
+  <!-- CONTENU PRINCIPAL -->
+  <main class="flex-1 md:ml-64 min-h-screen w-full transition-all duration-300 ease-in-out">
+    <header class="bg-white shadow p-4 flex items-center justify-between sticky top-0 z-30 gap-4">
+      <!-- Bouton ouvrir (mobile) -->
+      <button id="openSidebarBtn" aria-label="Ouvrir la sidebar"
+              class="md:hidden p-2 rounded-lg hover:bg-gray-200 transition flex-shrink-0">
+        <i data-lucide="menu" class="w-6 h-6"></i>
+      </button>
+
+      <h2 class="flex-1 text-lg md:text-xl font-semibold text-emerald-700 tracking-tight">
+        Dashboard Comptable
+      </h2>
+
+      <a href="{% url 'logout' %}"
+        class="hidden sm:flex px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition gap-2 flex-shrink-0">
+        <i data-lucide="log-out"></i> Déconnexion
+      </a>
+    </header>
+
+    <div class="p-4 sm:p-6 lg:p-8 animate-fadeIn">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    const sidebar = document.getElementById('sidebar');
+    const openBtn = document.getElementById('openSidebarBtn');
+    const closeBtn = document.getElementById('closeSidebarBtn');
+    const overlay = document.getElementById('overlay');
+
+    // Ouvrir sidebar via bouton ☰
+    openBtn.addEventListener('click', () => {
+      sidebar.classList.remove('-translate-x-full');
+      overlay.classList.remove('hidden');
+    });
+
+    // Fermer sidebar via croix ✖
+    closeBtn.addEventListener('click', () => {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+    });
+
+    // Fermer sidebar en cliquant sur overlay
+    overlay.addEventListener('click', () => {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

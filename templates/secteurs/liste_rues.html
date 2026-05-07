@@ -1,0 +1,164 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Liste des Rues — CLEAN{% endblock %}
+
+{% block extra_head %}
+<style>
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="p-6">
+
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 opacity-0 translate-y-4 header">
+        <h1 class="text-2xl font-bold text-emerald-600 flex items-center gap-2">
+            🛣️ Liste des rues
+        </h1>
+        <a href="{% url 'secteurs:create_rue_global' %}" 
+           class="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition shadow">
+            <i data-lucide="plus"></i> Ajouter une rue
+        </a> 
+    </div>
+
+    <!-- TABLEAU (desktop) -->
+    <div class="hidden md:block bg-white shadow rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full border-collapse text-sm sm:text-base">
+                <thead>
+                    <tr class="bg-emerald-600 text-white">
+                        <th class="p-3 text-left">Code</th>
+                        <th class="p-3 text-left">Nom</th>
+                        <th class="p-3 text-left">Type de voie</th>
+                        <th class="p-3 text-left">Secteur</th>
+                        <th class="p-3 text-left">Coordonnées GPS</th>
+                        <th class="p-3 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in page_obj %}
+                    <tr class="border-b hover:bg-slate-50 transition opacity-0 translate-y-2 row">
+                        <td class="p-3 font-semibold">{{ r.code }}</td>
+                        <td class="p-3">{{ r.nom|upper }}</td>
+                        <td class="p-3">{{ r.type_voie|default:"-" }}</td>
+                        <td class="p-3">{{ r.secteur.nom|upper }}</td>
+                        <td class="p-3">
+                            {% if r.gps_lat and r.gps_lon %}
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                                    {{ r.gps_lat }}, {{ r.gps_lon }}
+                                </span>
+                            {% else %}
+                                <span class="text-slate-500">Non défini</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 flex flex-wrap gap-2">
+                            <a href="{% url 'secteurs:edit_rue' r.id %}" 
+                               class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 flex items-center gap-1 text-sm">
+                                <i data-lucide="pencil"></i> Modifier
+                            </a>
+                            <a href="{% url 'secteurs:delete_rue' r.id %}" 
+                               class="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1 text-sm"
+                               onclick="return confirm('Supprimer cette rue ?');">
+                                <i data-lucide="trash"></i> Supprimer
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-6 text-center text-slate-500">Aucune rue enregistrée.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CARDS (mobile) avec animation -->
+    <div class="grid grid-cols-1 gap-4 md:hidden">
+        {% for r in page_obj %}
+        <div class="bg-white rounded-xl shadow p-5 border hover:shadow-lg transition opacity-0 translate-y-4 card">
+            <h2 class="text-lg font-bold text-slate-800 mb-1">{{ r.nom|upper }}</h2>
+            <p class="text-sm text-slate-600 mb-1"><strong>Code :</strong> {{ r.code|upper }}</p>
+            <p class="text-sm text-slate-600 mb-1"><strong>Type de voie :</strong> {{ r.type_voie|default:"-" }}</p>
+            <p class="text-sm text-slate-600 mb-1"><strong>Secteur :</strong> {{ r.secteur.nom|upper }}</p>
+            <p class="text-sm mb-2">
+                <strong>GPS :</strong>
+                {% if r.gps_lat and r.gps_lon %}
+                    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                        {{ r.gps_lat }}, {{ r.gps_lon }}
+                    </span>
+                {% else %}
+                    <span class="text-slate-500">Non défini</span>
+                {% endif %}
+            </p>
+            <!-- Actions -->
+            <div class="flex flex-wrap gap-2 mt-3">
+                <a href="{% url 'secteurs:edit_rue' r.id %}" 
+                   class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 flex items-center gap-1 text-sm">
+                    <i data-lucide="pencil"></i> Modifier
+                </a>
+                <a href="{% url 'secteurs:delete_rue' r.id %}" 
+                   class="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1 text-sm"
+                   onclick="return confirm('Supprimer cette rue ?');">
+                    <i data-lucide="trash"></i> Supprimer
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-slate-500">Aucune rue enregistrée.</p>
+        {% endfor %}
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="flex justify-center mt-6 gap-2">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300">⬅️ Précédent</a>
+      {% endif %}
+      <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded">
+        Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+      </span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300">Suivant ➡️</a>
+      {% endif %}
+    </div>
+
+</div>
+
+<!-- Script animation -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const cards = document.querySelectorAll(".card");
+  const rows = document.querySelectorAll("tbody tr");
+  const header = document.querySelector(".header");
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("animate-fadeInUp");
+        entry.target.classList.remove("opacity-0", "translate-y-4", "translate-y-2");
+      }
+    });
+  }, { threshold: 0.1 });
+
+  cards.forEach(card => observer.observe(card));
+  rows.forEach(row => observer.observe(row));
+  if (header) observer.observe(header);
+});
+
+lucide.createIcons();
+</script>
+
+<!-- Bouton flottant -->
+<a href="{% url 'secteurs:create_rue_global' %}"
+   class="fixed bottom-6 right-6 bg-emerald-600 text-white p-4 rounded-full shadow-xl hover:bg-emerald-700 transition transform hover:scale-110 flex items-center justify-center z-50"
+   title="Ajouter une rue">
+  <i data-lucide="plus"></i>
+</a>
+
+{% endblock %}

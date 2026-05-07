@@ -1,0 +1,131 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Contrôle des Incidents — CLEAN{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-8">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-extrabold text-slate-800">Centre de Contrôle des Incidents</h1>
+        <span class="px-4 py-2 bg-red-100 text-red-700 rounded-full font-bold text-sm">
+            {{ page_obj.paginator.count }} signalement(s) au total
+        </span>
+    </div>
+
+    <!-- 🔍 FILTRES -->
+    <form method="GET" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <input type="text" name="q" value="{{ query }}" placeholder="Rechercher agent, client..." 
+               class="px-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-emerald-500 focus:border-emerald-500">
+        
+        <select name="statut" class="px-4 py-2 border border-slate-200 rounded-xl text-sm">
+            <option value="">Tous les statuts</option>
+            {% for code, label in statut_choices %}
+                <option value="{{ code }}" {% if statut_filter == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="type" class="px-4 py-2 border border-slate-200 rounded-xl text-sm">
+            <option value="">Tous les types</option>
+            {% for code, label in type_choices %}
+                <option value="{{ code }}" {% if type_filter == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <button class="bg-slate-800 text-white px-6 py-2 rounded-xl hover:bg-slate-700 transition">
+            Filtrer
+        </button>
+    </form>
+
+    <!-- 📋 LISTE DES INCIDENTS -->
+    <div class="grid grid-cols-1 gap-6">
+        {% for inc in page_obj %}
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-6 md:p-8 flex flex-col md:flex-row gap-8">
+                
+                <!-- 📸 PHOTO -->
+                <div class="w-full md:w-48 h-48 bg-slate-100 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-100">
+                    {% if inc.photo %}
+                        <img src="{{ inc.photo.url }}" class="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform" 
+                             onclick="window.open(this.src)">
+                    {% else %}
+                        <div class="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                            <i data-lucide="image-off" class="w-10 h-10 mb-2"></i>
+                            <span class="text-xs">Pas de photo</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- ℹ️ INFOS -->
+                <div class="flex-1 space-y-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ inc.type_incident }}</span>
+                            <h2 class="text-xl font-bold text-slate-800">
+                                {% if inc.client %}{{ inc.client.nom }}{% else %}Incident général{% endif %}
+                            </h2>
+                            <p class="text-sm text-slate-500">Signalé par <b>{{ inc.agent.get_full_name }}</b> le {{ inc.date_signalement|date:"d/m/Y à H:i" }}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold 
+                            {% if inc.statut == 'Ouvert' %}bg-red-100 text-red-600
+                            {% elif inc.statut == 'En cours' %}bg-amber-100 text-amber-600
+                            {% elif inc.statut == 'Résolu' %}bg-emerald-100 text-emerald-600
+                            {% else %}bg-slate-100 text-slate-500{% endif %}">
+                            {{ inc.statut }}
+                        </span>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-2xl text-slate-700 italic border-l-4 border-slate-200">
+                        "{{ inc.description|default:"Aucune description fournie." }}"
+                    </div>
+
+                    {% if inc.notes_gestionnaire %}
+                    <div class="text-sm text-emerald-700">
+                        <b>Note du gestionnaire :</b> {{ inc.notes_gestionnaire }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 🛠️ ACTIONS -->
+                <div class="w-full md:w-72 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <form action="{% url 'dashboard:traiter_incident' inc.id %}" method="post" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Changer Statut</label>
+                            <select name="statut" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm">
+                                {% for code, label in statut_choices %}
+                                    <option value="{{ code }}" {% if inc.statut == code %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Ajouter une note</label>
+                            <textarea name="notes" rows="2" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm" 
+                                      placeholder="Action menée..."></textarea>
+                        </div>
+                        <button class="w-full bg-emerald-600 text-white font-bold py-2 rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-100">
+                            Enregistrer le traitement
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+            <i data-lucide="shield-check" class="w-16 h-16 text-emerald-200 mx-auto mb-4"></i>
+            <h3 class="text-xl font-bold text-slate-400">Aucun incident à signaler</h3>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 📄 PAGINATION -->
+    {% if page_obj.has_other_pages %}
+    <div class="flex justify-center gap-2 py-8">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-white border rounded-xl hover:bg-slate-50 transition text-sm">Précédent</a>
+        {% endif %}
+        <span class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-white border rounded-xl hover:bg-slate-50 transition text-sm">Suivant</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

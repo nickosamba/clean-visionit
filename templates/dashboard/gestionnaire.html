@@ -1,0 +1,278 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Dashboard Gestionnaire — CLEAN{% endblock %}
+{% block header %}Dashboard Gestionnaire{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+
+<!-- 🟩 HEADER PREMIUM -->
+<div class="flex items-center justify-between mb-8">
+    <div>
+        <!-- <h1 class="text-4xl font-bold text-emerald-700">Dashboard Gestionnaire</h1> -->
+        <p class="text-slate-500 mt-1">Résumé des opérations du {{ today }}</p>
+    </div>
+
+    <div class="relative">
+        <button onclick="toggleExportMenu()"
+                class="px-5 py-2 bg-emerald-600 text-white rounded-xl shadow-lg hover:bg-emerald-700 transition flex items-center gap-2">
+            <i data-lucide="download"></i> Exporter
+        </button>
+
+        <div id="exportMenu"
+             class="hidden absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+            <a href="{% url 'dashboard:export_pdf' %}" class="block px-4 py-2 hover:bg-slate-100">📄 Export PDF</a>
+            <a href="{% url 'dashboard:export_excel' %}" class="block px-4 py-2 hover:bg-slate-100">📊 Export Excel</a>
+            <a href="{% url 'dashboard:export_agents' %}" class="block px-4 py-2 hover:bg-slate-100">👤 Export agents</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleExportMenu() {
+    document.getElementById("exportMenu").classList.toggle("hidden");
+}
+</script>
+
+<!-- 🟦 KPIs PREMIUM -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+
+    <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-100 flex items-center gap-4">
+        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="users" class="w-6 h-6"></i>
+        </div>
+        <div>
+            <p class="text-sm text-slate-500">Clients du jour</p>
+            <h2 class="text-3xl font-bold">{{ total_clients }}</h2>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-100 flex items-center gap-4">
+        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="check-circle" class="w-6 h-6"></i>
+        </div>
+        <div>
+            <p class="text-sm text-slate-500">Clients servis</p>
+            <h2 class="text-3xl font-bold text-emerald-600">{{ served_clients }}</h2>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-100 flex items-center gap-4">
+        <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+        <div>
+            <p class="text-sm text-slate-500">Incidents</p>
+            <h2 class="text-3xl font-bold text-amber-600">{{ incidents }}</h2>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-100 flex items-center gap-4">
+        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="activity" class="w-6 h-6"></i>
+        </div>
+        <div>
+            <p class="text-sm text-slate-500">Progression globale</p>
+            <h2 class="text-3xl font-bold text-blue-600">{{ progression }}%</h2>
+        </div>
+    </div>
+
+</div>
+
+<!-- 🟧 GRAPHIQUES PREMIUM -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+
+    <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-100">
+        <h2 class="text-lg font-bold mb-4">Répartition des statuts</h2>
+        <canvas id="donutStatut"></canvas>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-100">
+        <h2 class="text-lg font-bold mb-4">Performance par agent</h2>
+        <canvas id="barAgents"></canvas>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-100">
+        <h2 class="text-lg font-bold mb-4">Performance par secteur</h2>
+        <canvas id="lineSecteurs"></canvas>
+    </div>
+
+</div>
+
+<!-- 🟪 CARTE PREMIUM -->
+<div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-100 mb-12">
+    <h2 class="text-xl font-bold mb-4">Carte des clients du jour</h2>
+    <div id="map" class="w-full h-96 rounded-xl"></div>
+</div>
+
+<script>
+var map = L.map('map').setView([-4.26336, 15.24288], 12);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+var markers = [];
+
+{% for tc in clients %}
+    {% if tc.client and tc.client.gps_lat and tc.client.gps_lon %}
+        try {
+            // Conversion sécurisée des coordonnées
+            var lat = parseFloat("{{ tc.client.gps_lat }}".toString().replace(",", "."));
+            var lon = parseFloat("{{ tc.client.gps_lon }}".toString().replace(",", "."));
+
+            if (!isNaN(lat) && !isNaN(lon)) {
+                // Popup premium CLEAN
+                var popupContent = `
+                    <div style="font-family: Inter, sans-serif; min-width:180px;">
+                        <div style="font-size:16px; font-weight:700; color:#0f172a;">{{ tc.client.nom }}</div>
+                        <div style="font-size:13px; color:#475569; margin-top:2px;">
+                            {{ tc.client.adresse_numero }} {% if tc.client.rue %}{{ tc.client.rue.nom }}{% endif %}
+                        </div>
+                        <div style="margin-top:8px;">
+                            <span style="display:inline-block; padding:3px 8px; border-radius:8px; font-size:11px; font-weight:600;
+                                {% if tc.statut_service == 'Servi' %} background:#d1fae5; color:#065f46;
+                                {% elif tc.statut_service == 'Planifié' %} background:#dbeafe; color:#1e40af;
+                                {% else %} background:#fee2e2; color:#b91c1c; {% endif %}">
+                                {{ tc.statut_service }}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                var marker = L.marker([lat, lon]).addTo(map).bindPopup(popupContent);
+                markers.push(marker);
+            }
+        } catch (e) {
+            console.error("Erreur GPS pour client {{ tc.client.id }}:", e);
+        }
+    {% endif %}
+{% endfor %}
+
+if (markers.length > 0) {
+    var group = L.featureGroup(markers);
+    map.fitBounds(group.getBounds());
+}
+</script>
+
+
+
+
+
+<!-- 🟥 TOURNÉES PREMIUM -->
+<div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-100 mb-12">
+    <h2 class="text-xl font-bold mb-4">Tournées du jour</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for t in tournees %}
+        <div class="p-5 bg-slate-50 border rounded-xl shadow-sm hover:shadow-md transition">
+            <h3 class="font-bold text-lg mb-2 text-emerald-700">Tournée {{ forloop.counter }}</h3>
+            <p><b>Agent :</b> {{ t.agent.user.first_name|title }} {{ t.agent.user.last_name|upper }}</p>
+            <p><b>Secteur :</b> {{ t.secteur.nom|upper }}</p>
+            <p><b>Clients :</b> {{ t.clients.count }}</p>
+            <p><b>Statut :</b> {{ t.statut }}</p>
+        </div>
+        {% empty %}
+        <p class="text-slate-500">Aucune tournée aujourd’hui.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 🟨 INCIDENTS PREMIUM -->
+<div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-100 mb-12">
+    <h2 class="text-xl font-bold mb-4 text-red-600">Incidents signalés</h2>
+
+    {% if incidents_list %}
+    <ul class="space-y-4">
+        {% for tc in incidents_list %}
+        <li class="p-4 bg-red-50 border border-red-200 rounded-xl shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+                    <i data-lucide="alert-triangle"></i>
+                </div>
+                <div>
+                    <p class="font-bold">{{ tc.client.nom }}</p>
+                    <p class="text-sm text-slate-600">{{ tc.client.adresse_numero }} Rue {{ tc.client.rue.nom|title }} {{ tc.client.rue.secteur|upper }}</p>
+                    <span class="text-xs text-red-700 font-semibold">Problème signalé</span>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-slate-500">Aucun incident aujourd’hui.</p>
+    {% endif %}
+</div>
+
+<!-- 🟫 AGENTS ACTIFS -->
+<div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-100 mb-12">
+    <h2 class="text-xl font-bold mb-4">Agents actifs aujourd’hui</h2>
+
+    <div class="flex flex-wrap gap-4">
+        {% for agent in agents_actifs %}
+        <div class="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl font-semibold shadow-sm">
+            {{ agent.user.first_name|title }} {{ agent.user.last_name|upper }}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- JSON sécurisé -->
+{{ stats_par_statut|json_script:"stats_par_statut" }}
+{{ stats_par_agent|json_script:"stats_par_agent" }}
+{{ stats_par_secteur|json_script:"stats_par_secteur" }}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const statsParStatut = JSON.parse(document.getElementById('stats_par_statut').textContent);
+const statsParAgent = JSON.parse(document.getElementById('stats_par_agent').textContent);
+const statsParSecteur = JSON.parse(document.getElementById('stats_par_secteur').textContent);
+
+// DONUT
+new Chart(document.getElementById('donutStatut'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(statsParStatut),
+        datasets: [{
+            data: Object.values(statsParStatut),
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+        }]
+    }
+});
+
+// BARRES
+new Chart(document.getElementById('barAgents'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(statsParAgent),
+        datasets: [{
+            label: 'Clients servis',
+            data: Object.values(statsParAgent),
+            backgroundColor: '#10b981',
+        }]
+    },
+    options: {
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// LIGNE
+new Chart(document.getElementById('lineSecteurs'), {
+    type: 'line',
+    data: {
+        labels: Object.keys(statsParSecteur),
+        datasets: [{
+            label: 'Clients servis',
+            data: Object.values(statsParSecteur),
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.2)',
+            tension: 0.4,
+        }]
+    }
+});
+</script>
+{% endblock %}

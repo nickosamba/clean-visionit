@@ -1,0 +1,162 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <!-- ✅ Balise viewport indispensable pour le responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CLEAN — Admin{% endblock %}</title>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn { animation: fadeIn .3s ease-out; }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+
+    <!-- 🟧 OVERLAY MOBILE -->
+    <div id="overlay"
+         class="fixed inset-0 bg-black bg-opacity-40 hidden z-40 animate-fadeIn md:hidden"></div>
+
+    <!-- 🟩 SIDEBAR ADMIN -->
+    <aside id="sidebar"
+           class="w-64 bg-white shadow-xl h-screen fixed left-0 top-0 flex flex-col
+                  transform -translate-x-full md:translate-x-0
+                  transition-transform duration-300 ease-in-out z-50">
+
+        <!-- Header du sidebar -->
+        <div class="p-6 border-b flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-emerald-600 tracking-tight">CLEAN Admin</h1>
+
+            <!-- Bouton fermer (mobile) -->
+            <button id="closeSidebarBtn" class="md:hidden p-2 rounded-lg hover:bg-gray-200 transition">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <!-- MENU ADMIN -->
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto text-gray-700 font-medium">
+            <p class="text-xs uppercase text-gray-400 px-2">Navigation</p>
+
+            <a href="{% url 'dashboard:dashboard_admin_summary' %}"
+               class="flex items-center gap-3 p-3 rounded-lg hover:bg-emerald-600 hover:text-white transition">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+            </a>
+
+            <a href="{% url 'dashboard:users_list' %}"
+               class="flex items-center gap-3 p-3 rounded-lg hover:bg-emerald-600 hover:text-white transition">
+                <i data-lucide="user-cog" class="w-5 h-5"></i> Comptes utilisateurs
+            </a>
+
+            <a href="#"
+               class="flex items-center gap-3 p-3 rounded-lg text-gray-400 bg-gray-100 cursor-not-allowed pointer-events-none
+                 transition">
+                <i data-lucide="users" class="w-5 h-5"></i> Clients
+            </a>
+
+            <a href="#"
+               class="flex items-center gap-3 p-3 rounded-lg text-gray-400 bg-gray-100 cursor-not-allowed pointer-events-none
+                 transition">
+                <i data-lucide="badge-check" class="w-5 h-5"></i> Abonnements
+            </a>
+
+            <a href="#"
+               class="flex items-center gap-3 p-3 rounded-lg text-gray-400 bg-gray-100 cursor-not-allowed pointer-events-none
+                 transition">
+                <i data-lucide="map" class="w-5 h-5"></i> Secteurs
+            </a>
+
+            <a href="#"
+               class="flex items-center gap-3 p-3 rounded-lg text-gray-400 bg-gray-100 cursor-not-allowed pointer-events-none
+                 transition">
+                <i data-lucide="alert-triangle" class="w-5 h-5"></i> Incidents
+            </a>
+
+            <a href="#"
+               class="flex items-center gap-3 p-3 rounded-lg text-gray-400 bg-gray-100 cursor-not-allowed pointer-events-none
+                 transition">
+                <i data-lucide="wallet" class="w-5 h-5"></i> Comptabilité
+            </a>
+        </nav>
+
+        <!-- Footer -->
+        <div class="p-4 border-t text-sm text-gray-500">
+            Connecté en tant que  
+            <strong class="text-gray-700">{{ request.user.username }}</strong>
+        </div>
+    </aside>
+
+    <!-- 🟦 CONTENU PRINCIPAL -->
+    <main class="md:ml-64 min-h-screen">
+
+        <!-- Header -->
+        <header class="bg-white shadow p-4 flex items-center justify-between sticky top-0 z-30 gap-4">
+
+            <!-- Bouton ouvrir (mobile) -->
+            <button id="openSidebarBtn" class="md:hidden p-2 rounded-lg hover:bg-gray-200 transition flex-shrink-0">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+
+            <!-- ✅ Titre responsive -->
+            <h2 class="flex-1 text-lg md:text-xl font-semibold text-gray-700 tracking-tight 
+                    whitespace-normal break-words overflow-hidden text-ellipsis">
+                {% block header %}{% endblock %}
+            </h2>
+
+            <!-- Bouton déconnexion -->
+            <a href="{% url 'logout' %}"
+            class="hidden sm:flex px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition gap-2 flex-shrink-0">
+                <i data-lucide="log-out"></i> Déconnexion
+            </a>
+        </header>
+
+        <!-- Contenu -->
+        <div class="p-4 sm:p-6 lg:p-8 animate-fadeIn">
+            {% block content %}{% endblock %}
+        </div>
+
+    </main>
+
+
+    <!-- Script Sidebar -->
+    <script>
+        lucide.createIcons();
+
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
+        const openBtn = document.getElementById("openSidebarBtn");
+        const closeBtn = document.getElementById("closeSidebarBtn");
+
+        // Ouvrir sidebar (mobile)
+        openBtn?.addEventListener("click", () => {
+            sidebar.classList.remove("-translate-x-full");
+            overlay.classList.remove("hidden");
+        });
+
+        // Fermer sidebar (mobile)
+        closeBtn?.addEventListener("click", () => {
+            sidebar.classList.add("-translate-x-full");
+            overlay.classList.add("hidden");
+        });
+
+        // Fermer en cliquant sur l’overlay
+        overlay?.addEventListener("click", () => {
+            sidebar.classList.add("-translate-x-full");
+            overlay.classList.add("hidden");
+        });
+    </script>
+
+</body>
+</html>

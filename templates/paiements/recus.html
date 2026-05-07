@@ -1,0 +1,88 @@
+{% extends "base_comptable.html" %}
+{% block title %}Liste des reçus{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-6">
+  <h1 class="text-2xl md:text-3xl font-bold mb-6">Suivi des Reçus</h1>
+  <p class="text-slate-500 mb-8">Liste des reçus enregistrés</p>
+
+  <!-- 🔎 Barre de recherche -->
+  <form method="get" class="flex gap-2 mb-6">
+    <input type="text" name="q" value="{{ query|default:'' }}" 
+           placeholder="Rechercher par client ou période..."
+           class="border rounded px-3 py-2 w-full focus:ring focus:ring-emerald-500 transition">
+    <button type="submit" 
+            class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transform transition hover:scale-105">
+      Rechercher
+    </button>
+  </form>
+
+  <!-- 📋 Table des reçus -->
+  <div class="bg-white shadow rounded-lg p-6 overflow-x-auto">
+    <table class="min-w-full border-collapse">
+      <thead>
+        <tr class="bg-emerald-600 text-white">
+          <th class="px-4 py-2 text-left">Numéro</th>
+          <th class="px-4 py-2 text-left">Client</th>
+          <th class="px-4 py-2 text-left">Montant payé</th>
+          <th class="px-4 py-2 text-left">Période</th>
+          <th class="px-4 py-2 text-left">Date paiement</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for recu in page_obj %}
+        <tr class="border-b hover:bg-gray-50 transition transform hover:scale-[1.01]">
+          <td class="px-4 py-2">{{ recu.numero_recu }}</td>
+          <td class="px-4 py-2">{{ recu.paiement.echeance.client.full_name }}</td>
+          <td class="px-4 py-2">{{ recu.paiement.montant_paye }} FCFA</td>
+          <td class="px-4 py-2">{{ recu.paiement.echeance.periode }}</td>
+          <td class="px-4 py-2">{{ recu.paiement.date_paiement|date:"d/m/Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-4 py-2 text-center text-gray-500">Aucun reçu trouvé</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 📑 Pagination -->
+  <div class="flex justify-center items-center mt-4 gap-2">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" 
+         class="px-3 py-1 border rounded hover:bg-gray-100 transform transition hover:scale-105">
+        Précédent
+      </a>
+    {% endif %}
+
+    <span class="px-3 py-1 bg-gray-100 rounded shadow-inner animate-pulse">
+      Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}" 
+         class="px-3 py-1 border rounded hover:bg-gray-100 transform transition hover:scale-105">
+        Suivant
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+tbody tr {
+  transition: all 0.2s ease-in-out;
+}
+tbody tr:hover {
+  background-color: #f9fafb;
+  transform: scale(1.01);
+}
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+</style>
+{% endblock %}

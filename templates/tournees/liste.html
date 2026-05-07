@@ -1,0 +1,181 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Tournées — CLEAN{% endblock %}
+
+{% block extra_head %}
+<style>
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-8">
+
+    <!-- 🟩 HEADER -->
+    <div class="flex items-center justify-between opacity-0 translate-y-4 header">
+        <h1 class="text-3xl font-bold text-emerald-600">Tournées</h1>
+    </div>
+
+    <!-- 🔍 FILTRES PREMIUM -->
+    <form method="GET" class="bg-white p-4 rounded-xl shadow-premium border border-slate-200 grid grid-cols-1 md:grid-cols-5 gap-4 opacity-0 translate-y-4 filters">
+        <input type="text" name="search" value="{{ search }}" placeholder="Rechercher..."
+               class="px-4 py-2 border rounded-lg text-sm focus:ring-emerald-500">
+
+        <select name="secteur" class="px-4 py-2 border rounded-lg text-sm">
+            <option value="">Secteur</option>
+            {% for s in secteurs %}
+                <option value="{{ s.id }}" {% if secteur_filter == s.id|stringformat:"s" %}selected{% endif %}>
+                    {{ s.nom }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="agent" class="px-4 py-2 border rounded-lg text-sm">
+            <option value="">Agent</option>
+            {% for a in agents %}
+                <option value="{{ a.id }}" {% if agent_filter == a.id|stringformat:"s" %}selected{% endif %}>
+                    {{ a.user.first_name }} {{ a.user.last_name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <input type="date" name="date" value="{{ date_filter }}"
+               class="px-4 py-2 border rounded-lg text-sm">
+
+        <div class="flex justify-end md:col-span-1">
+            <button class="px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm shadow hover:bg-emerald-700 w-full md:w-auto">
+                Filtrer
+            </button>
+        </div>
+    </form>
+
+    <!-- 🖥️ TABLEAU DESKTOP PREMIUM -->
+    <div class="hidden md:block bg-white rounded-xl shadow-premium border border-slate-200 overflow-hidden">
+        <table class="w-full table-fixed text-sm">
+            <thead>
+                <tr class="bg-emerald-600 text-white">
+                    <th class="p-3">Date</th>
+                    <th class="p-3">Secteur</th>
+                    <th class="p-3">Agent</th>
+                    <th class="p-3">Statut</th>
+                    <th class="p-3">Heure/Fin</th>
+                    <th class="p-3 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in page_obj %}
+                <tr class="border-b hover:bg-gray-50 opacity-0 translate-y-2 row">
+                    <td class="p-3">{{ t.date }}</td>
+                    <td class="p-3">{{ t.secteur.nom }}</td>
+                    <td class="p-3">{{ t.agent.user.first_name }} {{ t.agent.user.last_name }}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold
+                            {% if t.statut == 'Planifié' %} bg-yellow-100 text-yellow-800
+                            {% elif t.statut == 'Terminé' %} bg-emerald-100 text-emerald-800
+                            {% else %} bg-slate-200 text-slate-700 {% endif %}">
+                            {{ t.statut }}
+                        </span>
+                    </td>
+                    <td class="p-3">{{ t.heure_debut }} / {{ t.heure_fin }}</td>
+                    <td class="p-3 text-right">
+                        <div class="flex justify-end gap-3">
+                            <a href="{% url 'tournees:detail' t.id %}" class="text-emerald-600 font-bold hover:underline">Gérer clients</a>
+                            <a href="{% url 'tournees:edit' t.id %}" class="text-blue-600 hover:underline">Modifier</a>
+                            <a href="{% url 'tournees:delete' t.id %}" class="text-red-600 hover:underline">Supprimer</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-slate-500 py-6">Aucune tournée</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 📱 CARTES MOBILE PREMIUM -->
+    <div class="md:hidden grid grid-cols-1 gap-4">
+        {% for t in page_obj %}
+        <div class="bg-white p-4 rounded-xl shadow-premium border border-slate-200 opacity-0 translate-y-4 card">
+            <div class="flex justify-between items-center">
+                <p class="font-bold text-lg">{{ t.date }}</p>
+                <span class="px-2 py-1 rounded-full text-xs font-semibold
+                    {% if t.statut == 'Planifié' %} bg-yellow-100 text-yellow-800
+                    {% elif t.statut == 'Terminé' %} bg-emerald-100 text-emerald-800
+                    {% else %} bg-slate-200 text-slate-700 {% endif %}">
+                    {{ t.statut }}
+                </span>
+            </div>
+            <p class="mt-2"><b>Secteur :</b> {{ t.secteur.nom }}</p>
+            <p><b>Agent :</b> {{ t.agent.user.first_name }} {{ t.agent.user.last_name }}</p>
+            <p><b>Heure :</b> {{ t.heure_debut }} / {{ t.heure_fin }}</p>
+            <div class="flex justify-end gap-4 mt-4">
+                <a href="{% url 'tournees:detail' t.id %}" class="text-emerald-600 font-semibold">Détails</a>
+                <a href="{% url 'tournees:edit' t.id %}" class="text-blue-600 font-semibold">Modifier</a>
+                <a href="{% url 'tournees:delete' t.id %}" class="text-red-600 font-semibold">Supprimer</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-slate-500">Aucune tournée</p>
+        {% endfor %}
+    </div>
+
+    <!-- 📄 PAGINATION -->
+    <div class="mt-8 flex justify-center gap-2 text-sm">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&search={{ search }}&secteur={{ secteur_filter }}&agent={{ agent_filter }}&date={{ date_filter }}"
+               class="px-3 py-1 bg-slate-200 rounded-lg">←</a>
+        {% endif %}
+        <span class="px-4 py-1 bg-emerald-600 text-white rounded-lg">
+            Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&search={{ search }}&secteur={{ secteur_filter }}&agent={{ agent_filter }}&date={{ date_filter }}"
+               class="px-3 py-1 bg-slate-200 rounded-lg">→</a>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- 🟩 BOUTON FLOTTANT AJOUTER -->
+<a href="{% url 'tournees:create' %}"
+   class="fixed bottom-6 right-6 bg-emerald-600 text-white p-4 rounded-full shadow-xl hover:bg-emerald-700 transition transform hover:scale-110 flex items-center justify-center z-50"
+   title="Ajouter une tournée">
+   <i data-lucide="plus" class="w-5 h-5"></i>
+</a>
+
+<!-- Script animation -->
+<!-- Script animation -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const cards = document.querySelectorAll(".card");
+  const rows = document.querySelectorAll(".row");
+  const header = document.querySelector(".header");
+  const filters = document.querySelector(".filters");
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("animate-fadeInUp");
+        entry.target.classList.remove("opacity-0", "translate-y-4", "translate-y-2");
+      }
+    });
+  }, { threshold: 0.1 });
+
+  // Observer pour les éléments
+  cards.forEach(card => observer.observe(card));
+  rows.forEach(row => observer.observe(row));
+  if (header) observer.observe(header);
+  if (filters) observer.observe(filters);
+});
+
+lucide.createIcons();
+</script>
+
+{% endblock %}

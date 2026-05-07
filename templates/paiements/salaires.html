@@ -1,0 +1,121 @@
+{% extends "base_comptable.html" %}
+{% block title %}Gestion des Salaires{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl md:text-3xl font-bold mb-6">Gestion des Salaires</h1>
+
+<!-- 🔹 Barre de recherche et filtres -->
+<form method="get" class="flex gap-2 mb-6">
+  <input type="text" name="q" value="{{ query }}" placeholder="Rechercher agent..."
+         class="border rounded px-2 py-1">
+  <select name="statut" class="border rounded px-2 py-1">
+    <option value="">Tous statuts</option>
+    <option value="Payé" {% if statut == "Payé" %}selected{% endif %}>Payé</option>
+    <option value="En attente" {% if statut == "En attente" %}selected{% endif %}>En attente</option>
+  </select>
+  <select name="periode" class="border rounded px-2 py-1">
+    <option value="">Toutes périodes</option>
+    <option value="Janvier" {% if periode == "Janvier" %}selected{% endif %}>Janvier</option>
+    <option value="Février" {% if periode == "Février" %}selected{% endif %}>Février</option>
+    <!-- ajoute les autres mois -->
+  </select>
+  <button class="px-4 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700">Filtrer</button>
+</form>
+<a href="{% url 'dashboard:export_pdf_salaire' %}"
+   class="px-5 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700">
+   📄 Exporter rapport PDF
+</a>
+<a href="{% url 'dashboard:ajouter_salaire' %}"
+   class="px-5 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700">
+   ajouter un salaire
+</a>
+<form action="{% url 'dashboard:generer_salaires' %}" method="post" class="inline">
+    {% csrf_token %}
+    <button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
+        🔄 Générer salaires du mois
+    </button>
+</form>
+
+
+<!-- 📋 Tableau des salaires -->
+<div class="bg-white rounded-2xl shadow p-6">
+  <div class="overflow-x-auto">
+    <table class="min-w-full border-collapse text-sm md:text-base">
+      <thead>
+        <tr class="bg-emerald-600 text-white">
+          <th class="p-3 text-left">Agent</th>
+          <th class="p-3 text-left">Matricule</th>
+          <th class="p-3 text-left">Salaire Base</th>
+          <th class="p-3 text-left">Prime</th>
+          <th class="p-3 text-left">Total</th>
+          <th class="p-3 text-left">Période</th>
+          <th class="p-3 text-left">Statut</th>
+          <th class="p-3 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in page_obj %}
+        <tr class="border-b hover:bg-gray-50 transition-colors">
+          <td class="p-3 font-medium text-slate-700">{{ s.agent.user.get_full_name }}</td>
+          <td class="p-3 text-slate-500 font-mono text-xs">{{ s.agent.matricule }}</td>
+          <td class="p-3 font-semibold text-slate-700">{{ s.montant|floatformat:0 }} FCFA</td>
+          <td class="p-3 text-emerald-600">+ {{ s.prime|floatformat:0 }}</td>
+          <td class="p-3 font-bold text-emerald-700">
+            {{ s.montant|add:s.prime|floatformat:0 }} FCFA
+          </td>
+          <td class="p-3 text-slate-600">{{ s.periode_affiche }}</td>
+          <td class="p-3">
+            {% if s.statut == "Payé" %}
+              <span class="px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                ✅ Payé
+              </span>
+            {% elif s.statut == "Prévu" %}
+              <span class="px-2 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                ⏳ Prévu
+              </span>
+            {% else %}
+              <span class="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+                ⚠️ {{ s.statut }}
+              </span>
+            {% endif %}
+          </td>
+          <td class="p-3 text-center">
+            {% if s.statut == "Prévu" %}
+              <form action="{% url 'dashboard:payer_salaire' s.id %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded-lg transition-transform hover:scale-105 active:scale-95 shadow-sm">
+                  Payer
+                </button>
+              </form>
+            {% else %}
+              <span class="text-xs text-slate-400 italic">Aucune action</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="p-4 text-center text-slate-500">Aucun salaire enregistré.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 🔹 Pagination -->
+  <div class="mt-4 flex justify-center gap-2">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" 
+         class="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300">⬅ Précédent</a>
+    {% endif %}
+
+    <span class="px-3 py-1 bg-slate-100 rounded">
+      Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" 
+         class="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300">Suivant ➡</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

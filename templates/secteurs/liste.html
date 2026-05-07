@@ -1,0 +1,173 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Liste des Secteurs — CLEAN{% endblock %}
+
+{% block extra_head %}
+<style>
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="p-6">
+
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 opacity-0 translate-y-4 header">
+        <h1 class="text-2xl font-bold text-emerald-600 flex items-center gap-2">
+            🏙️ Liste des secteurs
+        </h1>
+        <a href="{% url 'secteurs:create' %}" 
+           class="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition shadow">
+            <i data-lucide="plus"></i> Ajouter un secteur
+        </a>
+    </div>
+
+    <!-- TABLEAU (desktop) -->
+    <div class="hidden md:block bg-white shadow rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full border-collapse text-sm sm:text-base">
+                <thead>
+                    <tr class="bg-emerald-600 text-white">
+                        <th class="p-3 text-left">Code</th>
+                        <th class="p-3 text-left">Nom</th>
+                        <th class="p-3 text-left">Ville</th>
+                        <th class="p-3 text-left">Pays</th>
+                        <th class="p-3 text-left">Nombre de rues</th>
+                        <th class="p-3 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in page_obj %}
+                    <tr class="border-b hover:bg-slate-50 transition opacity-0 translate-y-2 row">
+                        <td class="p-3 font-semibold">{{ s.code }}</td>
+                        <td class="p-3">{{ s.nom }}</td>
+                        <td class="p-3">{{ s.ville }}</td>
+                        <td class="p-3">{{ s.pays }}</td>
+                        <td class="p-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                {% if s.rues.count > 0 %} bg-emerald-100 text-emerald-700
+                                {% else %} bg-red-100 text-red-700 {% endif %}">
+                                {{ s.rues.count }} rue{% if s.rues.count > 1 %}s{% endif %}
+                            </span>
+                        </td>
+                        <td class="p-3 flex flex-wrap gap-2">
+                            <a href="{% url 'secteurs:detail' s.id %}" 
+                               class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 flex items-center gap-1 text-sm">
+                                <i data-lucide="eye"></i> Voir
+                            </a>
+                            <a href="{% url 'secteurs:edit' s.id %}" 
+                               class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 flex items-center gap-1 text-sm">
+                                <i data-lucide="pencil"></i> Modifier
+                            </a>
+                            <a href="{% url 'secteurs:delete' s.id %}" 
+                               class="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1 text-sm"
+                               onclick="return confirm('Supprimer ce secteur ?');">
+                                <i data-lucide="trash"></i> Supprimer
+                            </a>
+                            <a href="{% url 'secteurs:create_rue' s.id %}" 
+                               class="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 flex items-center gap-1 text-sm">
+                                <i data-lucide="plus"></i> Rue
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-6 text-center text-slate-500">Aucun secteur enregistré.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CARDS (mobile) avec animation -->
+    <div class="grid grid-cols-1 gap-4 md:hidden">
+        {% for s in page_obj %}
+        <div class="bg-white rounded-xl shadow p-5 border hover:shadow-lg transition opacity-0 translate-y-4 card">
+            <h2 class="text-lg font-bold text-slate-800 mb-1">{{ s.nom }}</h2>
+            <p class="text-sm text-slate-600 mb-1"><strong>Code :</strong> {{ s.code }}</p>
+            <p class="text-sm text-slate-600 mb-1"><strong>Ville :</strong> {{ s.ville }}</p>
+            <p class="text-sm text-slate-600 mb-1"><strong>Pays :</strong> {{ s.pays }}</p>
+            <p class="text-sm mb-2">
+                <strong>Rues :</strong>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold
+                    {% if s.rues.count > 0 %} bg-emerald-100 text-emerald-700
+                    {% else %} bg-red-100 text-red-700 {% endif %}">
+                    {{ s.rues.count }} rue{% if s.rues.count > 1 %}s{% endif %}
+                </span>
+            </p>
+            <!-- Actions -->
+            <div class="flex flex-wrap gap-2 mt-3">
+                <a href="{% url 'secteurs:detail' s.id %}" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 flex items-center gap-1 text-sm">
+                    <i data-lucide="eye"></i> Voir
+                </a>
+                <a href="{% url 'secteurs:edit' s.id %}" class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 flex items-center gap-1 text-sm">
+                    <i data-lucide="pencil"></i> Modifier
+                </a>
+                <a href="{% url 'secteurs:delete' s.id %}" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1 text-sm"
+                   onclick="return confirm('Supprimer ce secteur ?');">
+                    <i data-lucide="trash"></i> Supprimer
+                </a>
+                <a href="{% url 'secteurs:create_rue' s.id %}" class="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 flex items-center gap-1 text-sm">
+                    <i data-lucide="plus"></i> Rue
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-slate-500">Aucun secteur enregistré.</p>
+        {% endfor %}
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="flex justify-center mt-6 gap-2">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300">⬅️ Précédent</a>
+      {% endif %}
+      <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded">
+        Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+      </span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300">Suivant ➡️</a>
+      {% endif %}
+    </div>
+
+</div>
+
+<!-- Script animation -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const cards = document.querySelectorAll(".card");
+  const rows = document.querySelectorAll(".row");
+  const header = document.querySelector(".header");
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("animate-fadeInUp");
+        entry.target.classList.remove("opacity-0", "translate-y-4", "translate-y-2");
+      }
+    });
+  }, { threshold: 0.1 });
+
+  // Observer pour les éléments
+  cards.forEach(card => observer.observe(card));
+  rows.forEach(row => observer.observe(row));
+  if (header) observer.observe(header);
+});
+
+lucide.createIcons();
+</script>
+
+<!-- Bouton flottant -->
+<a href="{% url 'secteurs:create' %}"
+   class="fixed bottom-6 right-6 bg-emerald-600 text-white p-4 rounded-full shadow-xl hover:bg-emerald-700 transition transform hover:scale-110 flex items-center justify-center z-50"
+   title="Ajouter un secteur">
+  <i data-lucide="plus"></i>
+</a>
+
+{% endblock %}

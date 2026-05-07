@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+{% load static %}
+<style>
+@page { size: A4; margin: 40px; }
+body { font-family: "Inter", sans-serif; font-size: 13px; }
+
+/* --- PAGE DE GARDE --- */
+.cover-banner {
+    width: 100%; height: 80px;
+    background: #059669;
+    position: absolute; top: 0; left: 0;
+}
+.cover { text-align: center; margin-top: 140px; position: relative; }
+.cover img { width: 150px; margin-bottom: 20px; }
+.cover-title { font-size: 32px; color: #059669; font-weight: bold; margin-bottom: 10px; }
+.cover-subtitle { font-size: 16px; color: #555; margin-bottom: 40px; }
+.cover-info { font-size: 15px; color: #666; }
+
+/* Séparation */
+.page-break { page-break-after: always; }
+
+/* --- PAGE 2 : Infos détaillées --- */
+h1 {
+    text-align: center;
+    color: #059669;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 20px;
+}
+
+th {
+    background: #f6f6f6; /* labels sobres */
+    color: #333;
+    padding: 8px;
+    text-align: left;
+    font-weight: 600;
+    width: 30%;
+}
+
+td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    color: #222; /* contenu en gris foncé/noir */
+}
+
+tr:nth-child(even) td {
+    background: #fafafa;
+}
+
+/* Signature */
+.signature-block {
+    margin-top: 40px;
+    text-align: right;
+    font-size: 14px;
+}
+
+.signature-line {
+    margin-top: 40px;
+    border-top: 1px solid #444;
+    width: 250px;
+    float: right;
+    text-align: center;
+    padding-top: 5px;
+}
+
+/* Footer */
+.footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 11px;
+    color: #777;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ✅ PAGE DE GARDE -->
+<div class="cover-banner"></div>
+<div class="cover">
+    <img src="{{ logo_path }}" alt="Logo">
+    <div class="cover-title">Dossier Client</div>
+    <div class="cover-subtitle">Export généré automatiquement</div>
+    <div class="cover-info">
+        Date : {{ date }} <br>
+        Gestionnaire : {{ gestionnaire }} <br>
+        Client : {{ client.full_name }} <br>
+        Code : {{ client.code_client }}
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ✅ PAGE 2 : Infos détaillées -->
+<h1>Informations du Client</h1>
+<table>
+    <tr><th>Nom</th><td>{{ client.nom|upper }}</td></tr>
+    <tr><th>Prénom</th><td>{{ client.prenom|title }}</td></tr>
+    <tr><th>Email</th><td>{{ client.email|default:"-" }}</td></tr>
+    <tr><th>Téléphone</th><td>{{ client.telephone_principal }}</td></tr>
+    <tr><th>Rue</th><td>{% if client.rue %}{{ client.rue.nom|title }}{% else %}-{% endif %}</td></tr>
+    <tr><th>Secteur</th><td>{% if client.rue %}{{ client.rue.secteur|title }}{% else %}-{% endif %}</td></tr>
+    <tr><th>Abonnement</th><td>{% if client.abonnement|title %}{{ client.abonnement.nom|title }}{% else %}-{% endif %}</td></tr>
+    <tr><th>Montant mensuel</th><td>{{ client.montant_mensuel }} FCFA</td></tr>
+    <tr><th>Date début :</th><td>{{ client.date_debut|date:"d/m/Y" }}</td></tr>
+    <tr><th>Date recouvrement</th><td>{{ client.date_recouvrement|date:"d/m/Y" }}</td></tr>
+    <tr><th>Statut</th><td>{{ client.statut }}</td></tr>
+</table>
+<div class="page-break"></div> 
+<!-- ✅ PAGE 3 : Options de service --> 
+ <!-- ✅ PAGE 3 : Options de service -->
+<h1>Options de Service</h1>
+{% if client.options.exists %}
+<table>
+    <thead>
+        <tr>
+            <th>Option</th>
+            <th>Valeur</th>
+            <th>Prix supplémentaire</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for opt in client.options.all %}
+        <tr>
+            <td>{{ opt.option.nom }}</td>
+            <td>{{ opt.valeur|default:"-" }}</td>
+            <td>{{ opt.option.prix_supplementaire }} FCFA</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="text-align:center; color:#777;">Aucune option de service associée à ce client.</p>
+{% endif %}
+<br><br>
+
+
+<!-- Signature officielle -->
+    <div class="signature-block">
+        Fait à Brazzaville, le {{ date }}<br>
+        <div class="signature-line">
+            <br>
+            Gestionnaire
+        </div>
+    </div>
+<br><br><br><br>
+<div class="footer">
+    CLEAN — Export PDF généré automatiquement
+</div>
+
+</body>
+</html>

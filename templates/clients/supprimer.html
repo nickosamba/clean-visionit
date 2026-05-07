@@ -1,0 +1,31 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Supprimer le client{% endblock %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-8 text-red-600">Supprimer le client</h1>
+
+<div class="bg-white p-8 rounded-2xl shadow-premium border border-slate-200 max-w-xl mx-auto">
+
+    <p class="text-lg mb-6">
+        Voulez-vous vraiment supprimer le client :
+        <span class="font-semibold">{{ client.nom }} {{ client.prenom }}</span> ?
+    </p>
+
+    <form method="POST" class="flex justify-end gap-4">
+        {% csrf_token %}
+
+        <a href="{% url 'clients:details' client.id %}"
+           class="px-5 py-2 bg-slate-200 rounded-lg hover:bg-slate-300">
+            Annuler
+        </a>
+
+        <button type="submit"
+                class="px-6 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700">
+            Supprimer
+        </button>
+    </form>
+
+</div>
+
+{% endblock %}

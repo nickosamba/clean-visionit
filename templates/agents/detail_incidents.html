@@ -1,0 +1,76 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Détail de l’incident — CLEAN{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-6">
+
+    <h1 class="text-2xl font-bold text-emerald-600 mb-6">
+        Incident #{{ incident.id }} — {{ incident.type_incident }}
+    </h1>
+
+    <div class="bg-white shadow rounded-lg p-6 space-y-5">
+
+        <!-- Agent -->
+        <div>
+            <p class="text-sm text-slate-500">Agent</p>
+            <p class="font-semibold">{{ incident.agent.first_name }} {{ incident.agent.last_name }} ({{ incident.agent.email }})</p>
+        </div>
+
+        <!-- Client -->
+        <div>
+            <p class="text-sm text-slate-500">Client concerné</p>
+            <p class="font-semibold">
+                {% if incident.client %}
+                    {{ incident.client.code_client }} — {{ incident.client.nom }}
+                {% else %}
+                    <span class="text-slate-400">Aucun</span>
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Type -->
+        <div>
+            <p class="text-sm text-slate-500">Type d’incident</p>
+            <span class="px-3 py-1 rounded-lg text-sm bg-red-100 text-red-700 font-semibold">
+                {{ incident.type_incident }}
+            </span>
+        </div>
+
+        <!-- Description -->
+        <div>
+            <p class="text-sm text-slate-500">Description</p>
+            <p class="font-medium">{{ incident.description|default:"-" }}</p>
+        </div>
+
+        <!-- Photo -->
+        <div>
+            <p class="text-sm text-slate-500">Photo</p>
+            {% if incident.photo %}
+                <img src="{{ incident.photo.url }}" alt="Photo de l’incident" class="rounded-lg shadow mt-2 max-h-64">
+            {% else %}
+                <p class="text-slate-400">Aucune photo disponible</p>
+            {% endif %}
+        </div>
+
+        <!-- Date -->
+        <div>
+            <p class="text-sm text-slate-500">Date de signalement</p>
+            <p class="font-semibold">{{ incident.date_signalement|date:"d/m/Y H:i" }}</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-4 mt-6">
+            <a href="{% url 'agents:delete_incident' incident.id %}" 
+               class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+               onclick="return confirm('Supprimer cet incident ?');">
+                Supprimer
+            </a>
+            <a href="{% url 'agents:liste_incidents' %}" 
+               class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition">
+                Retour à la liste
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

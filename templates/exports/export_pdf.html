@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+
+@page {
+    size: A4;
+    margin: 40px;
+    @bottom-center {
+        content: "Page " counter(page) " / " counter(pages);
+        font-size: 12px;
+        color: #777;
+    }
+}
+
+
+body {
+    font-family: "DejaVu Sans", sans-serif;
+    color: #333;
+}
+
+/* --- PAGE DE GARDE --- */
+.cover {
+    text-align: center;
+    margin-top: 120px;
+    position: relative;
+}
+
+.cover img {
+    width: 150px;
+    margin-bottom: 20px;
+}
+
+.cover-title {
+    font-size: 32px;
+    color: #059669;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.cover-subtitle {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 40px;
+}
+
+.cover-info {
+    font-size: 15px;
+    color: #666;
+}
+
+.page-break {
+    page-break-after: always;
+}
+
+/* --- PAGE 2 : TABLEAU --- */
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.header img {
+    width: 110px;
+    margin-bottom: 10px;
+}
+
+h1 {
+    font-size: 26px;
+    color: #059669;
+    margin-bottom: 5px;
+}
+
+.date {
+    font-size: 14px;
+    color: #666;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 25px;
+}
+
+th {
+    background: #059669;
+    color: white;
+    padding: 10px;
+    font-size: 14px;
+}
+
+td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    font-size: 13px;
+}
+
+tr:nth-child(even) {
+    background: #f6f6f6;
+}
+
+/* Signature */
+.signature {
+    margin-top: 50px;
+    text-align: right;
+    font-size: 14px;
+}
+
+/* Footer */
+.footer {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 12px;
+    color: #777;
+}
+
+</style>
+</head>
+<body>
+
+<!-- PAGE DE GARDE -->
+<div class="cover">
+    <img src="{{ logo_path }}" alt="Logo CLEAN">
+
+    <div class="cover-title">Rapport des Agents</div>
+
+    <div class="cover-subtitle">Généré automatiquement par CLEAN</div>
+
+    {% if user.first_name or user.last_name %}
+    <div class="cover-info">
+        Date : {{ date }} <br>
+        Gestionnaire : {{ user.first_name }} {{ user.last_name }}
+    </div>
+    {% else %}
+        <div class="cover-info">
+            Date : {{ date }}
+        </div>
+    {% endif %}
+
+</div>
+
+<div class="page-break"></div>
+
+<!-- PAGE 2 : TABLEAU -->
+<div class="header">
+    <img src="{{ logo_path }}" alt="Logo CLEAN">
+    <h1>Liste des Agents</h1>
+    <div class="date">Généré le {{ date }}</div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Matricule</th>
+            <th>Nom complet</th>
+            <th>Email</th>
+            <th>Téléphone</th>
+            <th>Secteur</th>
+            <th>Statut</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for agent in agents %}
+        <tr>
+            <td>{{ agent.matricule }}</td>
+            <td>{{ agent.user.first_name }} {{ agent.user.last_name }}</td>
+            <td>{{ agent.user.email }}</td>
+            <td>{{ agent.telephone_principal }}</td>
+            <td>{{ agent.secteur.nom }}</td>
+            <td>{{ agent.statut }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- <div class="signature">
+    Signature du gestionnaire<br>
+    ___________________________
+</div> -->
+
+<div class="footer">
+    CLEAN — Document généré automatiquement
+</div>
+
+</body>
+</html>

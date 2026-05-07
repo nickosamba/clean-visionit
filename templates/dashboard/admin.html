@@ -1,0 +1,187 @@
+{% extends "base_admin.html" %}
+{% block title %}Dashboard Administrateur — CLEAN PRO{% endblock %}
+{% block header %}Dashboard Administrateur{% endblock %}
+
+{% block content %}
+<div class="space-y-10">
+
+    <!-- 🟢 KPIs PREMIUM -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white shadow-xl rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-gray-500 text-sm">Clients</h3>
+                <i data-lucide="users" class="w-6 h-6 text-emerald-600"></i>
+            </div>
+            <p class="text-3xl font-bold text-emerald-600 mt-3">{{ total_clients }}</p>
+        </div>
+
+        <div class="bg-white shadow-xl rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-gray-500 text-sm">Agents</h3>
+                <i data-lucide="user-check" class="w-6 h-6 text-blue-600"></i>
+            </div>
+            <p class="text-3xl font-bold text-blue-600 mt-3">{{ total_agents }}</p>
+        </div>
+
+        <div class="bg-white shadow-xl rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-gray-500 text-sm">Secteurs</h3>
+                <i data-lucide="map" class="w-6 h-6 text-indigo-600"></i>
+            </div>
+            <p class="text-3xl font-bold text-indigo-600 mt-3">{{ total_secteurs }}</p>
+        </div>
+
+        <div class="bg-white shadow-xl rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-gray-500 text-sm">Incidents du jour</h3>
+                <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
+            </div>
+            <p class="text-3xl font-bold text-red-600 mt-3">{{ incidents_today }}</p>
+        </div>
+    </div>
+
+    <!-- 🟦 GRAPHIQUES PREMIUM -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Abonnements -->
+        <div class="bg-white shadow-xl rounded-2xl p-6">
+            <h3 class="font-semibold mb-4">Répartition des abonnements</h3>
+            <div class="h-56">
+                <canvas id="chartAbonnements"></canvas>
+            </div>
+        </div>
+
+        <!-- Agents par secteur -->
+        <div class="bg-white shadow-xl rounded-2xl p-6">
+            <h3 class="font-semibold mb-4">Agents par secteur</h3>
+            <div class="h-56">
+                <canvas id="chartAgentsSecteurs"></canvas>
+            </div>
+        </div>
+
+        <!-- Incidents du mois -->
+        <div class="bg-white shadow-xl rounded-2xl p-6">
+            <h3 class="font-semibold mb-4">Incidents du mois</h3>
+            <div class="h-56">
+                <canvas id="chartIncidentsMois"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 🟨 ACTIVITÉ RÉCENTE -->
+    <div class="bg-white shadow-xl rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold">Derniers clients ajoutés</h3>
+            <span class="text-xs text-gray-400">5 plus récents</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-emerald-600 text-white">
+                        <th class="p-3 text-left">Nom</th>
+                        <th class="p-3 text-left">Téléphone</th>
+                        <th class="p-3 text-left">Abonnement</th>
+                        <th class="p-3 text-left">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in derniers_clients %}
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="p-3 whitespace-nowrap">{{ c.prenom }} {{ c.nom }}</td>
+                        <td class="p-3 whitespace-nowrap">{{ c.telephone_principal }}</td>
+                        <td class="p-3 whitespace-nowrap">{{ c.abonnement.nom }}</td>
+                        <td class="p-3 whitespace-nowrap">{{ c.created_at|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="p-4 text-center text-gray-400">
+                            Aucun client récent pour le moment.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- 📊 Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const chartAbonnementsEl = document.getElementById('chartAbonnements');
+if (chartAbonnementsEl) {
+    new Chart(chartAbonnementsEl, {
+        type: 'doughnut',
+        data: {
+            labels: {{ abonnements_labels|safe }},
+            datasets: [{
+                data: {{ valeurs_abonnements|safe }},
+                backgroundColor: ['#10b981','#3b82f6','#f59e0b','#ef4444'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            plugins: { legend: { position: 'bottom' } },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+const chartAgentsSecteursEl = document.getElementById('chartAgentsSecteurs');
+if (chartAgentsSecteursEl) {
+    new Chart(chartAgentsSecteursEl, {
+        type: 'bar',
+        data: {
+            labels: {{ secteurs_labels|safe }},
+            datasets: [{
+                label: 'Agents par secteur',
+                data: {{ valeurs_agents|safe }},
+                backgroundColor: '#3b82f6'
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+const chartIncidentsMoisEl = document.getElementById('chartIncidentsMois');
+if (chartIncidentsMoisEl) {
+    new Chart(chartIncidentsMoisEl, {
+        type: 'line',
+        data: {
+            labels: {{ incidents_month_labels|safe }},
+            datasets: [{
+                label: 'Incidents du mois',
+                data: {{ incidents_month_values|safe }},
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239,68,68,0.2)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            plugins: { legend: { position: 'bottom' } },
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: { display: true, text: 'Jour du mois' }
+                },
+                y: {
+                    title: { display: true, text: 'Nombre d’incidents' },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+</script>
+
+{% endblock %}

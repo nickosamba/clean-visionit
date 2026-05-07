@@ -1,0 +1,219 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Liste des clients{% endblock %}
+
+{% block extra_head %}
+<style>
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="p-6">
+
+    <!-- HEADER -->
+    <h1 class="text-3xl font-bold mb-8 opacity-0 translate-y-4 header">👥 Liste des clients</h1>
+
+    <div class="bg-white p-6 rounded-2xl shadow-premium border border-slate-200">
+
+        <!-- BARRE D’ACTIONS -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 opacity-0 translate-y-4 actions">
+            <a href="{% url 'clients:create' %}"
+               class="w-full sm:w-auto px-5 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700 text-center">
+                + Ajouter un client
+            </a>
+
+            <!-- Menu Export -->
+            <div class="relative inline-block text-left w-full sm:w-auto">
+                <button type="button" onclick="toggleExportMenu()" 
+                        class="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 flex items-center justify-center gap-2">
+                    ⬇️ Exporter
+                </button>
+                <div id="exportMenu" class="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md hidden z-50">
+                    <a href="{% url 'clients:export_excel' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">📊 Excel</a>
+                    <a href="{% url 'clients:export_pdf' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">📄 PDF</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTRES -->
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 opacity-0 translate-y-4 filters">
+            <input type="text" name="search" placeholder="Rechercher un client..."
+                   value="{{ search }}"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500">
+
+            <select name="statut"
+                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500">
+                <option value="">Statut</option>
+                {% for value, label in statuts %}
+                    <option value="{{ value }}" {% if statut == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select name="abonnement"
+                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500">
+                <option value="">Abonnement</option>
+                {% for a in abonnements %}
+                    <option value="{{ a.id }}" {% if abonnement == a.id|stringformat:"s" %}selected{% endif %}>
+                        {{ a.nom }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+                Filtrer
+            </button>
+        </form>
+
+        <!-- TABLEAU (desktop) -->
+        <div class="overflow-x-auto hidden md:block">
+            <table class="w-full border-collapse text-sm sm:text-base">
+                <thead>
+                    <tr class="bg-slate-100 text-left text-slate-700">
+                        <th class="p-3">Code</th>
+                        <th class="p-3">Nom</th>
+                        <th class="p-3">Téléphone</th>
+                        <th class="p-3">Rue</th>
+                        <th class="p-3">Abonnement</th>
+                        <th class="p-3">Statut</th>
+                        <th class="p-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in page_obj %}
+                    <tr class="border-b hover:bg-slate-50 transition opacity-0 translate-y-2 row">
+                        <td class="p-3 font-semibold text-slate-700">{{ c.code_client }}</td>
+                        <td class="p-3">{{ c.nom|upper }} {{ c.prenom|title }}</td>
+                        <td class="p-3">{{ c.telephone_principal }}</td>
+                        <td class="p-3">{{ c.rue.nom|title }}</td>
+                        <td class="p-3">{{ c.abonnement.nom }}</td>
+                        <td class="p-3">
+                            <span class="px-3 py-1 rounded-full text-sm
+                                {% if c.statut == 'Actif' %} bg-emerald-100 text-emerald-700
+                                {% elif c.statut == 'Suspendu' %} bg-yellow-100 text-yellow-700
+                                {% else %} bg-red-100 text-red-700 {% endif %}">
+                                {{ c.statut }}
+                            </span>
+                        </td>
+                        <td class="p-3 flex flex-wrap gap-3">
+                            <a href="{% url 'clients:details' c.id %}" class="text-blue-600 hover:underline">Voir</a>
+                            <a href="{% url 'clients:update' c.id %}" class="text-emerald-600 hover:underline">Modifier</a>
+                            <a href="{% url 'clients:delete' c.id %}" class="text-red-600 hover:underline">Supprimer</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="p-6 text-center text-slate-500">Aucun client trouvé.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- CARDS (mobile) avec animation -->
+        <div class="grid grid-cols-1 gap-4 md:hidden">
+            {% for c in page_obj %}
+            <div class="bg-white rounded-xl shadow p-5 border hover:shadow-lg transition opacity-0 translate-y-4 card">
+                <h2 class="text-lg font-bold text-slate-800 mb-1">{{ c.nom|upper }} {{ c.prenom|title }}</h2>
+                <p class="text-sm text-slate-600 mb-2"><strong>Code :</strong> {{ c.code_client }}</p>
+                <p class="text-sm text-slate-600 mb-2"><strong>Téléphone :</strong> {{ c.telephone_principal }}</p>
+                <p class="text-sm text-slate-600 mb-2"><strong>Adresse :</strong>{{ c.adresse_numero }} Rue {{ c.rue.nom|title }} {{ c.rue.secteur|title }}</p>
+                <p class="text-sm text-slate-600 mb-2"><strong>Abonnement :</strong> {{ c.abonnement.nom }}</p>
+                <p class="text-sm mb-2">
+                    <strong>Statut :</strong>
+                    <span class="px-3 py-1 rounded-full text-xs
+                        {% if c.statut == 'Actif' %} bg-emerald-100 text-emerald-700
+                        {% elif c.statut == 'Suspendu' %} bg-yellow-100 text-yellow-700
+                        {% else %} bg-red-100 text-red-700 {% endif %}">
+                        {{ c.statut }}
+                    </span>
+                </p>
+                <!-- Actions -->
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <a href="{% url 'clients:details' c.id %}" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm">Voir</a>
+                    <a href="{% url 'clients:update' c.id %}" class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 text-sm">Modifier</a>
+                    <a href="{% url 'clients:delete' c.id %}" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm">Supprimer</a>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-center text-slate-500">Aucun client trouvé.</p>
+            {% endfor %}
+        </div>
+
+            <!-- PAGINATION -->
+        <div class="flex justify-center mt-6 gap-2">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&search={{ search }}&statut={{ statut }}&abonnement={{ abonnement }}" 
+               class="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300">
+              ⬅️ Précédent
+            </a>
+          {% endif %}
+
+          <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded">
+            Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+          </span>
+
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&search={{ search }}&statut={{ statut }}&abonnement={{ abonnement }}" 
+               class="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300">
+              Suivant ➡️
+            </a>
+          {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Script animation -->
+<script>
+function toggleExportMenu() {
+  const menu = document.getElementById("exportMenu");
+  menu.classList.toggle("hidden");
+}
+document.addEventListener("click", function(event) {
+  const menu = document.getElementById("exportMenu");
+  const button = event.target.closest("button");
+  if (!event.target.closest("#exportMenu") && !button) {
+    menu.classList.add("hidden");
+  }
+});
+
+// Animation progressive des éléments
+document.addEventListener("DOMContentLoaded", () => {
+  const cards = document.querySelectorAll(".card");
+  const rows = document.querySelectorAll("tbody tr");
+  const header = document.querySelector(".header");
+  const actions = document.querySelector(".actions");
+  const filters = document.querySelector(".filters");
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("animate-fadeInUp");
+        entry.target.classList.remove("opacity-0", "translate-y-4", "translate-y-2");
+      }
+    });
+  }, { threshold: 0.1 });
+
+  cards.forEach(card => observer.observe(card));
+  rows.forEach(row => observer.observe(row));
+  if (header) observer.observe(header);
+  if (actions) observer.observe(actions);
+  if (filters) observer.observe(filters);
+});
+</script>
+
+<!-- Bouton flottant -->
+<a href="{% url 'clients:create' %}"
+   class="fixed bottom-6 right-6 bg-emerald-600 text-white p-4 rounded-full shadow-xl hover:bg-emerald-700 transition transform hover:scale-110 flex items-center justify-center z-50"
+   title="Ajouter un client">
+  <i data-lucide="user-plus"></i>
+</a>
+
+{% endblock %}

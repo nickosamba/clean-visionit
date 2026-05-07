@@ -1,0 +1,240 @@
+{% extends "base_agent.html" %}
+{% block title %}CLEAN - Dashboard Agent{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<style>
+    .modal { transition: opacity 0.25s ease; }
+    body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<header class="flex justify-between items-center mb-6 pt-4">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Ma Tournée</h1>
+    <p class="text-slate-500 text-sm">Bonjour <span class="font-bold"> {{ agent.user.first_name|upper }} </span>, bon service !</p>
+  </div>
+
+  {% if tournees %}
+    <div class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold border border-emerald-200">
+      {{ tournees.0.statut }}
+    </div>
+  {% endif %}
+</header>
+
+<!-- Messages -->
+{% if messages %}
+<div class="mb-6 space-y-2">
+    {% for message in messages %}
+    <div class="p-4 rounded-xl {% if message.tags == 'success' %}bg-emerald-100 text-emerald-700{% else %}bg-amber-100 text-amber-700{% endif %} font-bold text-sm">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white p-4 rounded-2xl shadow border border-slate-100">
+    <div class="flex items-center gap-2 mb-1 text-slate-500 text-xs">
+      <i data-lucide="map" class="w-4 h-4 text-emerald-600"></i>
+      <span>Secteur</span>
+    </div>
+    <h3 class="font-bold text-lg">{{ agent.secteur.nom }}</h3>
+  </div>
+
+  <div class="bg-white p-4 rounded-2xl shadow border border-slate-100">
+    <div class="flex items-center gap-2 mb-1 text-slate-500 text-xs">
+      <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+      <span>Passages</span>
+    </div>
+    <h3 class="font-bold text-lg">{{ served_clients }} / {{ total_clients }}</h3>
+  </div>
+
+  <div class="bg-white p-4 rounded-2xl shadow border border-slate-100">
+    <div class="flex items-center gap-2 mb-1 text-slate-500 text-xs">
+      <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
+      <span>Incidents</span>
+    </div>
+    <h3 class="font-bold text-lg text-amber-600">{{ total_incidents }}</h3>
+  </div>
+
+  <div class="bg-white p-4 rounded-2xl shadow border border-slate-100">
+    <div class="flex items-center gap-2 mb-1 text-slate-500 text-xs">
+      <i data-lucide="truck" class="w-4 h-4 text-slate-600"></i>
+      <span>Véhicule</span>
+    </div>
+    <h3 class="font-bold text-lg">{% if tournees %}{{ tournees.0.vehicule }}{% else %}Aucun{% endif %}</h3>
+  </div>
+</div>
+
+<!-- Progression -->
+<div class="bg-white p-5 rounded-2xl shadow border border-slate-100 my-6">
+  <div class="flex justify-between items-center mb-2">
+    <span class="text-sm font-semibold">Progression</span>
+    <span class="text-sm font-bold text-emerald-600">{{ progression }}%</span>
+  </div>
+  <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+    <div class="bg-emerald-500 h-full rounded-full transition-all duration-700" style="width:{{ progression }}%"></div>
+  </div>
+</div>
+
+<!-- Carte -->
+<div class="bg-white p-5 rounded-2xl shadow border border-slate-100 mb-6">
+  <div id="map" class="w-full h-80 rounded-2xl"></div>
+</div>
+
+<script>
+  var map = L.map('map').setView([-4.26336, 15.24288], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  var markers = [];
+
+  var clientsData = [
+    {% for tc in clients %}
+      {% if tc.client.gps_lat and tc.client.gps_lon %}
+        {
+          "nom": "{{ tc.client.nom|escapejs }}",
+          "statut": "{{ tc.statut_service }}",
+          "lat": {{ tc.client.gps_lat|stringformat:"f" }},
+          "lon": {{ tc.client.gps_lon|stringformat:"f" }}
+        }{% if not forloop.last %},{% endif %}
+      {% endif %}
+    {% endfor %}
+  ];
+
+  clientsData.forEach(function(c) {
+    var color = c.statut === "Servi" ? "gray" : (c.statut === "Planifié" ? "green" : "red");
+    var marker = L.circleMarker([c.lat, c.lon], { radius: 8, color: color, fillColor: color, fillOpacity: 0.8 }).addTo(map);
+    markers.push(marker);
+  });
+
+  if (markers.length > 0) { map.fitBounds(L.featureGroup(markers).getBounds()); }
+
+  // 🛰️ GÉOLOCALISATION EN TEMPS RÉEL DE L'AGENT
+  var agentMarker, accuracyCircle;
+
+  function onLocationFound(pos) {
+    var lat = pos.coords.latitude;
+    var lon = pos.coords.longitude;
+    var accuracy = pos.coords.accuracy; // Précision en mètres
+
+    if (!agentMarker) {
+      // Création du marqueur de l'agent (point bleu)
+      agentMarker = L.circleMarker([lat, lon], {
+        radius: 9,
+        color: '#ffffff',
+        fillColor: '#3b82f6',
+        fillOpacity: 1,
+        weight: 3,
+        zIndexOffset: 1000
+      }).addTo(map).bindPopup("Ma position");
+
+      // Cercle de précision (zone d'ombre bleue)
+      accuracyCircle = L.circle([lat, lon], {
+        radius: accuracy,
+        color: '#3b82f6',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.15,
+        weight: 1
+      }).addTo(map);
+    } else {
+      // Mise à jour sans créer de nouveau point
+      agentMarker.setLatLng([lat, lon]);
+      accuracyCircle.setLatLng([lat, lon]);
+      accuracyCircle.setRadius(accuracy);
+    }
+  }
+
+  function onLocationError(e) {
+    console.warn("Précision GPS faible ou accès refusé :", e.message);
+  }
+
+  if ("geolocation" in navigator) {
+    navigator.geolocation.watchPosition(onLocationFound, onLocationError, {
+      enableHighAccuracy: true,  // Force l'utilisation du vrai GPS (Puce mobile)
+      maximumAge: 10000,         // Rafraîchir toutes le 10 secondes max
+      timeout: 15000
+    });
+  }
+</script>
+
+<!-- Prochains clients -->
+<h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+  <i data-lucide="map-pin" class="w-5 h-5 text-emerald-600"></i> Ma liste de travail
+</h2>
+
+<div class="grid grid-cols-1 gap-4">
+  {% for tc in clients %}
+    <div class="bg-white p-4 rounded-2xl shadow border {% if tc.statut_service == 'Planifié' %}border-emerald-500 bg-emerald-50/30{% endif %}">
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <h4 class="font-bold text-slate-800">{{ tc.client.nom }} {{ tc.client.prenom }}</h4>
+          <p class="text-xs text-slate-500">{{ tc.client.adresse_numero }} {{ tc.client.rue.nom }}</p>
+        </div>
+        <span class="px-2 py-1 rounded text-[10px] font-bold uppercase
+            {% if tc.statut_service == 'Servi' %}bg-emerald-100 text-emerald-700
+            {% elif tc.statut_service == 'Absent' %}bg-slate-200 text-slate-600
+            {% else %}bg-blue-100 text-blue-700{% endif %}">
+            {{ tc.statut_service }}
+        </span>
+      </div>
+
+      {% if tc.statut_service == 'Planifié' %}
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="openModal('confirm-{{ tc.id }}')" 
+                    class="py-3 bg-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-100">
+                <i data-lucide="check"></i> Confirmer
+            </button>
+            <button onclick="location.href='{% url 'dashboard:agent_incident' %}'" 
+                    class="py-3 bg-amber-500 text-white rounded-xl font-bold flex items-center justify-center gap-2">
+                <i data-lucide="alert-circle"></i> Incident
+            </button>
+        </div>
+
+        <!-- MODAL DE CONFIRMATION -->
+        <div id="confirm-{{ tc.id }}" class="modal fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+            <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
+            <div class="bg-white w-11/12 max-w-md rounded-3xl shadow-2xl relative p-6">
+                <h3 class="text-xl font-bold mb-4">Confirmer le passage</h3>
+                <form method="post" action="{% url 'dashboard:confirmer_passage' tc.id %}" enctype="multipart/form-data" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Photo de preuve (Optionnel)</label>
+                        <input type="file" name="photo" accept="image/*" capture="environment" 
+                               class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Commentaire</label>
+                        <textarea name="commentaire" rows="2" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-emerald-500" placeholder="Rien à signaler..."></textarea>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" onclick="closeModal('confirm-{{ tc.id }}')" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold">Annuler</button>
+                        <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold">Valider</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
+<script>
+    function openModal(id) {
+        const m = document.getElementById(id);
+        m.classList.remove('opacity-0', 'pointer-events-none');
+        document.body.classList.add('modal-active');
+    }
+    function closeModal(id) {
+        const m = document.getElementById(id);
+        m.classList.add('opacity-0', 'pointer-events-none');
+        document.body.classList.remove('modal-active');
+    }
+    lucide.createIcons();
+</script>
+
+<br><br><br><br>
+{% endblock %}

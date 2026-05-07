@@ -1,0 +1,336 @@
+/* Custom admin styles to match #059669 color scheme */
+
+/* Primary button colors */
+.btn-primary,
+.button-primary,
+.unfold-btn--primary {
+    background-color: #059669 !important;
+    border-color: #059669 !important;
+}
+
+.btn-primary:hover,
+.button-primary:hover {
+    background-color: #047857 !important;
+    border-color: #047857 !important;
+}
+
+/* Links */
+a {
+    color: #059669 !important;
+}
+
+a:hover {
+    color: #047857 !important;
+}
+
+/* Headers and titles */
+.h1, .h2, .h3, .h4, .h5, .h6,
+h1, h2, h3, h4, h5, h6 {
+    color: #059669 !important;
+}
+
+/* Sidebar navigation active state */
+.sidebar-menu-item.active {
+    background-color: #059669 !important;
+    border-color: #059669 !important;
+}
+
+/* Table headers */
+.table th {
+    background-color: #059669 !important;
+}
+
+/* Input focus states */
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 1px #059669 !important;
+}
+
+/* Progress bars and other UI elements */
+.progress-bar {
+    background-color: #059669 !important;
+}
+
+/* Admin dashboard cards */
+.card {
+    border-left-color: #059669 !important;
+}
+
+/* Navigation */
+.navbar {
+    background-color: #059669 !important;
+}
+
+/* Badge colors */
+.badge-success {
+    background-color: #059669 !important;
+}
+
+/* Hover effects */
+.hover-bg-green:hover {
+    background-color: #059669 !important;
+}
+
+/* Specific Unfold classes */
+.unfold-formset .unfold-heading,
+.unfold-formset .unfold-heading a {
+    color: #059669 !important;
+}
+
+/* Form elements */
+.form-group .form-text,
+.form-group .help-block {
+    color: #059669 !important;
+}
+
+/* Enhanced form field styling */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="tel"],
+select,
+textarea {
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    padding: 0.5rem !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="tel"]:focus,
+select:focus,
+textarea:focus {
+    outline: none !important;
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
+}
+
+/* Form labels */
+label {
+    color: #374151 !important;
+    font-weight: 500 !important;
+}
+
+/* Form fieldsets */
+fieldset {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.5rem !important;
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+legend {
+    color: #059669 !important;
+    font-weight: 600 !important;
+    padding: 0 0.5rem !important;
+}
+
+/* Checkbox and radio inputs */
+input[type="checkbox"],
+input[type="radio"] {
+    width: 1rem !important;
+    height: 1rem !important;
+    border: 2px solid #d1d5db !important;
+    border-radius: 0.25rem !important;
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+    background-color: #059669 !important;
+    border-color: #059669 !important;
+}
+
+/* Select dropdowns */
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+    background-position: right 0.5rem center !important;
+    background-repeat: no-repeat !important;
+    background-size: 1.5em 1.5em !important;
+    padding-right: 2.5rem !important;
+}
+
+/* Form groups */
+.form-row,
+.field-box {
+    margin-bottom: 1rem !important;
+}
+
+/* Form submit buttons */
+.submit-row input[type="submit"],
+.submit-row input[type="button"] {
+    background-color: #059669 !important;
+    border-color: #059669 !important;
+    color: white !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.375rem !important;
+    font-weight: 500 !important;
+}
+
+.submit-row input[type="submit"]:hover,
+.submit-row input[type="button"]:hover {
+    background-color: #047857 !important;
+    border-color: #047857 !important;
+}
+
+/* Specific User model form styling */
+#user_form input[type="text"],
+#user_form input[type="email"],
+#user_form input[type="password"],
+#user_form input[type="number"],
+#user_form input[type="date"],
+#user_form input[type="tel"],
+#user_form select,
+#user_form textarea,
+form[id*="user"] input[type="text"],
+form[id*="user"] input[type="email"],
+form[id*="user"] input[type="password"],
+form[id*="user"] input[type="number"],
+form[id*="user"] input[type="date"],
+form[id*="user"] input[type="tel"],
+form[id*="user"] select,
+form[id*="user"] textarea {
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    padding: 0.5rem !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+}
+
+#user_form input[type="text"]:focus,
+#user_form input[type="email"]:focus,
+#user_form input[type="password"]:focus,
+#user_form input[type="number"]:focus,
+#user_form input[type="date"]:focus,
+#user_form input[type="tel"]:focus,
+#user_form select:focus,
+#user_form textarea:focus,
+form[id*="user"] input[type="text"]:focus,
+form[id*="user"] input[type="email"]:focus,
+form[id*="user"] input[type="password"]:focus,
+form[id*="user"] input[type="number"]:focus,
+form[id*="user"] input[type="date"]:focus,
+form[id*="user"] input[type="tel"]:focus,
+form[id*="user"] select:focus,
+form[id*="user"] textarea:focus {
+    outline: none !important;
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
+}
+
+/* User model specific fieldsets */
+#user_form fieldset,
+form[id*="user"] fieldset {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.5rem !important;
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+#user_form legend,
+form[id*="user"] legend {
+    color: #059669 !important;
+    font-weight: 600 !important;
+    padding: 0 0.5rem !important;
+}
+
+/* Specific styling for custom User model fields */
+.field-email,
+.field-username,
+.field-role,
+.field-deux_facteurs_active,
+.field-password,
+.field-password1,
+.field-password2 {
+    margin-bottom: 1rem !important;
+}
+
+.field-email label,
+.field-username label,
+.field-role label,
+.field-deux_facteurs_active label,
+.field-password label,
+.field-password1 label,
+.field-password2 label {
+    display: block !important;
+    margin-bottom: 0.25rem !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+}
+
+/* Styling for the role selection dropdown */
+.field-role select {
+    background-color: white !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    padding: 0.5rem !important;
+    width: 100% !important;
+}
+
+.field-role select:focus {
+    outline: none !important;
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
+}
+
+/* Specific styling for password fields */
+.field-password input,
+.field-password1 input,
+.field-password2 input {
+    background-color: white !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    padding: 0.5rem !important;
+    width: 100% !important;
+}
+
+.field-password input:focus,
+.field-password1 input:focus,
+.field-password2 input:focus {
+    outline: none !important;
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
+}
+
+/* Password change form specific styling */
+.form-row .field-password,
+.form-row .field-password1,
+.form-row .field-password2 {
+    width: 100% !important;
+}
+
+/* Password strength meter if present */
+.passwordmeter-container,
+.password-strength {
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    padding: 0.5rem !important;
+}
+
+.password-strength {
+    background-color: #f9fafb !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        background-color: #059669 !important;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    input[type="tel"],
+    select,
+    textarea {
+        width: 100% !important;
+    }
+}

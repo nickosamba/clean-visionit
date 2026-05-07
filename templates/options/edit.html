@@ -1,0 +1,52 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Modifier une option — CLEAN{% endblock %}
+
+{% block content %}
+
+<div class="max-w-2xl mx-auto p-6">
+
+    <h1 class="text-2xl font-bold text-emerald-600 mb-6">Modifier l’option</h1>
+
+    <form method="POST" class="space-y-5 bg-white p-6 rounded-lg shadow">
+        {% csrf_token %}
+
+        <!-- Champ Nom -->
+        <div>
+            <label class="font-semibold">Nom</label>
+            <input type="text" name="nom" value="{{ option.nom }}" 
+                   class="w-full p-2 border rounded-lg" required>
+        </div>
+
+        <!-- Champ Prix supplémentaire -->
+        <div>
+            <label class="font-semibold">Prix supplémentaire</label>
+            <input type="number" step="0.01" name="prix_supplementaire"
+                   value="{{ option.prix_supplementaire|stringformat:'g' }}"
+                   class="w-full p-2 border rounded-lg" required>
+        </div>
+
+        <!-- Champ Description -->
+        <div>
+            <label class="font-semibold">Description</label>
+            <textarea name="description" class="w-full p-2 border rounded-lg">{{ option.description }}</textarea>
+        </div>
+
+        <!-- Champ Statut -->
+        <div>
+            <label class="font-semibold">Statut</label>
+            <select name="statut" class="w-full p-2 border rounded-lg">
+                <option value="Active" {% if option.statut == "Active" %}selected{% endif %}>Active</option>
+                <option value="Inactive" {% if option.statut == "Inactive" %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+
+        <!-- Bouton -->
+        <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
+            Mettre à jour
+        </button>
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CLEAN - Dashboard Agent{% endblock %}</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    {% load static %}
+    {% block extra_head %}{% endblock %}
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0fdf4; }
+        h1, h2, h3 { font-family: 'Outfit', sans-serif; }
+
+        /* Empêche Leaflet de passer au-dessus de la nav */
+        #map, .leaflet-pane, .leaflet-top, .leaflet-bottom {
+            z-index: 1 !important;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100">
+
+    <!-- WRAPPER GLOBAL -->
+    <div class="min-h-screen flex flex-col">
+
+        <!-- CONTENU -->
+        <main class="flex-1">
+            <div class="w-full 
+                        px-4 
+                        md:px-8 
+                        lg:px-12 
+                        xl:px-20 
+                        2xl:px-32 
+                        py-6 
+                        mx-auto">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+
+        <!-- NAV BAS TOUJOURS VISIBLE (MOBILE + PC) -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 
+            flex justify-around items-center 
+            z-[9999] shadow-lg">
+
+            <!-- BOUTON TOURNEE -->
+            <a href="{% url 'dashboard:agent' %}"
+               class="flex flex-col items-center gap-1 transition-transform hover:scale-110 
+                      {% if request.resolver_match.url_name == 'agent' %}text-emerald-600{% else %}text-slate-400{% endif %}">
+                <i data-lucide="truck"></i>
+                <span class="text-[10px] font-bold">TOURNEE</span>
+            </a>
+
+            <!-- BOUTON INCIDENT -->
+            <a href="{% url 'dashboard:agent_incident' %}"
+               class="relative flex flex-col items-center gap-1 transition-transform hover:scale-110 
+                      {% if request.resolver_match.url_name == 'agent_incident' %}text-emerald-600{% else %}text-slate-400{% endif %}">
+                <i data-lucide="alert-circle"></i>
+                <span class="text-[10px] font-bold">INCIDENT</span>
+                <!-- Badge notification -->
+                {% if total_incidents and total_incidents > 0 %}
+                  <span class="absolute -top-1 -right-2 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow">
+                    {{ total_incidents }}
+                  </span>
+                {% endif %}
+            </a>
+
+            <!-- BOUTON PROFIL -->
+            <a href="{% url 'dashboard:agent_profile' %}"
+               class="flex flex-col items-center gap-1 transition-transform hover:scale-110 
+                      {% if request.resolver_match.url_name == 'agent_profile' %}text-emerald-600{% else %}text-slate-400{% endif %}">
+                <i data-lucide="user"></i>
+                <span class="text-[10px] font-bold">PROFIL</span>
+            </a>
+
+        </nav>
+    </div>
+
+    <script>lucide.createIcons();</script>
+
+    <!-- Agent notification system -->
+    <script src="{% static 'js/tournee-notifications.js' %}"></script>
+    <script src="{% static 'js/agent-notifications.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

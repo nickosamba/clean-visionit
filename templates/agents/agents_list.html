@@ -1,0 +1,266 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Agents{% endblock %}
+
+{% block extra_head %}
+<style>
+/* Animation fadeInUp pour les cartes mobiles */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Animation fadeIn pour titre et compteur */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+/* Animation fadeInRow pour les lignes du tableau */
+@keyframes fadeInRow {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fadeInRow {
+  animation: fadeInRow 0.4s ease-out forwards;
+}
+
+/* Animation pulse pour bouton flottant */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Animation menu export */
+#exportMenu {
+  transition: all 0.3s ease;
+  transform: scale(0.95);
+  opacity: 0;
+}
+#exportMenu.show {
+  transform: scale(1);
+  opacity: 1;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-6 animate-fadeIn">Agents</h1>
+
+<p class="text-slate-600 mb-4 animate-fadeIn" style="animation-delay:0.3s">
+  Total agents : <b>{{ total_agents }}</b>
+</p>
+
+<!-- Barre d’actions -->
+<div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+  <!-- Recherche -->
+  <form method="GET" class="flex items-center gap-2">
+    <input type="text" name="search" value="{{ search }}"
+           placeholder="Rechercher un agent..."
+           class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500">
+    <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700 transition">
+      Rechercher
+    </button>
+  </form>
+
+  <!-- Filtre secteur -->
+  <form method="GET">
+    <select name="secteur"
+            class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+            onchange="this.form.submit()">
+      <option value="">Tous les secteurs</option>
+      {% for s in secteurs %}
+        <option value="{{ s.id }}" {% if secteur_filter == s.id|stringformat:"s" %}selected{% endif %}>
+          {{ s.nom }}
+        </option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<!-- Menu Export -->
+<div class="relative inline-block text-left mb-6">
+  <button onclick="toggleExportMenu()"
+          class="px-4 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700 transition flex items-center gap-2">
+    <i data-lucide="download"></i> Exporter agents
+  </button>
+
+  <div id="exportMenu"
+       class="hidden absolute mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+    <a href="{% url 'agents:export_pdf' %}" 
+       class="block px-4 py-2 hover:bg-slate-100">📄 Export PDF</a>
+    <a href="{% url 'agents:export_excel' %}" 
+       class="block px-4 py-2 hover:bg-slate-100">📊 Export Excel</a>
+  </div>
+</div>
+
+<script>
+  function toggleExportMenu() {
+    const menu = document.getElementById("exportMenu");
+    menu.classList.toggle("hidden");
+    menu.classList.toggle("show");
+  }
+</script>
+
+<!-- TABLEAU (PC) -->
+<div class="hidden md:block bg-white p-6 rounded-2xl shadow border border-slate-200">
+  <table class="w-full border-collapse">
+    <thead>
+      <tr class="bg-slate-100 text-left">
+        <th class="p-3">Agent</th>
+        <th class="p-3">Matricule</th>
+        <th class="p-3">Téléphone</th>
+        <th class="p-3">Secteur</th>
+        <th class="p-3">Statut</th>
+        <th class="p-3 text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in agents %}
+      <tr class="border-b hover:bg-slate-50 transition fadeInRow" style="animation-delay: {{ forloop.counter0|add:"0.1" }}s">
+        <td class="p-3 font-semibold">{{ a.user.last_name|upper}} {{ a.user.first_name|title }}</td>
+        <td class="p-3">{{ a.matricule|upper}}</td>
+        <td class="p-3">{{ a.telephone_principal }}</td>
+        <td class="p-3">{{ a.secteur.nom|upper}}</td>
+        <td class="p-3">
+          {% if a.statut == "Actif" %}
+            <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">Actif</span>
+          {% elif a.statut == "Inactif" %}
+            <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">Inactif</span>
+          {% elif a.statut == "Suspendu" %}
+            <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm">Suspendu</span>
+          {% else %}
+            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">En congé</span>
+          {% endif %}
+        </td>
+        <td class="p-3 text-right">
+          <a href="{% url 'agents:detail_agent' a.id %}" class="text-blue-600 hover:underline">Voir</a> |
+          <a href="{% url 'agents:modifier' a.id %}" class="text-emerald-600 hover:underline">Modifier</a> |
+          <a href="{% url 'agents:delete_agent' a.id %}" class="text-red-600 hover:underline">Supprimer</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- CARTES (MOBILE) -->
+<div class="md:hidden grid grid-cols-1 gap-4">
+  {% for a in agents %}
+  <div class="bg-white p-4 rounded-xl shadow border border-slate-200 opacity-0 translate-y-4 card">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600">
+        {{ a.user.first_name|first|upper }}{{ a.user.last_name|first|upper }}
+      </div>
+      <div>
+        <p class="font-bold text-lg">{{ a.user.first_name|title }} {{ a.user.last_name|upper }}</p>
+        <p class="text-sm text-slate-500">{{ a.matricule }}</p>
+      </div>
+    </div>
+
+    <p><b>Téléphone :</b> {{ a.telephone_principal }}</p>
+    <p><b>Secteur :</b> {{ a.secteur.nom|upper }}</p>
+
+    <p class="mt-2">
+      {% if a.statut == "Actif" %}
+        <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">Actif</span>
+      {% elif a.statut == "Inactif" %}
+        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">Inactif</span>
+      {% elif a.statut == "Suspendu" %}
+        <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm">Suspendu</span>
+      {% else %}
+        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">En congé</span>
+      {% endif %}
+    </p>
+
+        <div class="flex justify-end gap-4 mt-4">
+      <a href="{% url 'agents:detail_agent' a.id %}" class="text-blue-600 font-semibold">Voir</a>
+      <a href="{% url 'agents:modifier' a.id %}" class="text-emerald-600 font-semibold">Modifier</a>
+      <a href="{% url 'agents:delete_agent' a.id %}" class="text-red-600 font-semibold">Supprimer</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Script animation pour les cartes mobiles -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const cards = document.querySelectorAll(".card");
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate-fadeInUp");
+          entry.target.classList.remove("opacity-0", "translate-y-4");
+        }
+      });
+    }, { threshold: 0.1 });
+
+    cards.forEach(card => observer.observe(card));
+  });
+</script>
+
+<!-- Compteur dynamique -->
+<p class="text-sm text-slate-500 mt-4">
+  Affichage de <b>{{ agents|length }}</b> agents sur <b>{{ total_agents }}</b>
+</p>
+
+<!-- PAGINATION PREMIUM -->
+<div class="mt-10 flex flex-col items-center gap-4">
+  <p class="text-slate-600 text-sm">
+    Page <b>{{ page_obj.number }}</b> sur <b>{{ page_obj.paginator.num_pages }}</b>
+  </p>
+
+  <div class="flex items-center gap-2">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&search={{ search }}&secteur={{ secteur_filter }}"
+         class="px-3 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 transition">←</a>
+    {% else %}
+      <span class="px-3 py-1 rounded-lg bg-slate-100 text-slate-400">←</span>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if num == page_obj.number %}
+        <span class="px-3 py-1 rounded-lg bg-emerald-600 text-white">{{ num }}</span>
+      {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+        <a href="?page={{ num }}&search={{ search }}&secteur={{ secteur_filter }}"
+           class="px-3 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 transition">{{ num }}</a>
+      {% elif num == 1 %}
+        <a href="?page=1&search={{ search }}&secteur={{ secteur_filter }}"
+           class="px-3 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 transition">1</a>
+        {% if page_obj.number > 4 %}
+          <span class="px-2">…</span>
+        {% endif %}
+      {% elif num == page_obj.paginator.num_pages %}
+        {% if page_obj.number < page_obj.paginator.num_pages|add:"-3" %}
+          <span class="px-2">…</span>
+        {% endif %}
+        <a href="?page={{ num }}&search={{ search }}&secteur={{ secteur_filter }}"
+           class="px-3 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 transition">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&search={{ search }}&secteur={{ secteur_filter }}"
+         class="px-3 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 transition">→</a>
+    {% else %}
+      <span class="px-3 py-1 rounded-lg bg-slate-100 text-slate-400">→</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- BOUTON FLOTTANT animé -->
+<a href="{% url 'agents:ajouter' %}"
+   class="fixed bottom-6 right-6 bg-emerald-600 text-white p-4 rounded-full shadow-xl hover:bg-emerald-700 transition transform hover:scale-110 flex items-center justify-center z-50 pulse">
+  <i data-lucide="user-plus"></i>
+</a>
+
+{% endblock %}

@@ -1,0 +1,213 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Clients{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+  <h2 class="text-2xl font-bold text-gray-800">📋 Clients</h2>
+
+  <!-- Barre de recherche -->
+  <form method="get" class="flex gap-2">
+    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Rechercher..."
+           class="px-3 py-2 border rounded-md w-64">
+    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">🔍</button>
+  </form>
+
+  <!-- Bouton ajouter client -->
+  <button onclick="openAddClientModal()" 
+          class="px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition">
+    ➕ Nouveau client
+  </button>
+</div>
+
+<!-- Grille de cartes clients -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for client in clients %}
+  <div class="bg-white shadow rounded-lg p-5 flex flex-col">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-lg font-semibold text-gray-900">{{ client.nom }} {{ client.prenom }}</h3>
+      <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-700">
+        {{ client.statut }}
+      </span>
+    </div>
+
+    <!-- Infos -->
+    <p class="text-sm text-gray-600"><strong>Code :</strong> {{ client.code_client }}</p>
+    <p class="text-sm text-gray-600"><strong>Email :</strong> {{ client.email|default:"—" }}</p>
+    <p class="text-sm text-gray-600"><strong>Téléphone principal :</strong> {{ client.telephone_principal }}</p>
+    <p class="text-sm text-gray-600"><strong>Téléphone secondaire :</strong> {{ client.telephone_secondaire|default:"—" }}</p>
+    <p class="text-sm text-gray-600"><strong>Adresse :</strong> {{ client.adresse_numero }} {{ client.rue }}</p>
+    <p class="text-sm text-gray-600"><strong>Abonnement :</strong> {{ client.abonnement }}</p>
+    <p class="text-sm text-gray-600"><strong>Montant Mensuel :</strong> {{ client.montant_mensuel }} FCFA</p>
+    <p class="text-sm text-gray-600"><strong>Date Début :</strong> {{ client.date_debut }}</p>
+    <p class="text-sm text-gray-600"><strong>Date Recouvrement :</strong> {{ client.date_recouvrement }}</p>
+    <p class="text-sm text-gray-600"><strong>Commentaires :</strong> {{ client.commentaires|default:"—" }}</p>
+
+    <!-- Actions -->
+    <div class="flex gap-2 mt-4 justify-end">
+      <a href="#" 
+         onclick="openEditClientModal({{ client.id }}, '{{ client.nom }}', '{{ client.prenom }}', '{{ client.email }}', '{{ client.telephone_principal }}', '{{ client.telephone_secondaire }}', '{{ client.adresse_numero }}', '{{ client.rue.id }}', '{{ client.abonnement.id }}', '{{ client.montant_mensuel }}', '{{ client.date_debut }}', '{{ client.date_recouvrement }}', '{{ client.statut }}', '{{ client.commentaires }}')"
+         class="px-3 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600">✏️ Modifier</a>
+      <form method="post" action="#">
+        {% csrf_token %}
+        <button type="submit" 
+                class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+                onclick="return confirm('Supprimer ce client ?');">🗑️ Supprimer</button>
+      </form>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-gray-500">Aucun client enregistré.</p>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+<div class="flex justify-center mt-6">
+  <div class="flex gap-2">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 bg-gray-200 rounded">⬅️</a>
+    {% endif %}
+    <span class="px-3 py-1 bg-gray-100 rounded">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 bg-gray-200 rounded">➡️</a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modale Ajouter Client -->
+<div id="addClientModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+    <h3 class="text-lg font-bold mb-4">➕ Nouveau client</h3>
+    <form method="post" action="{% url 'clients:create' %}" class="space-y-3">
+      {% csrf_token %}
+      <input type="text" name="nom" placeholder="Nom" class="w-full border rounded px-3 py-2">
+      <input type="text" name="prenom" placeholder="Prénom" class="w-full border rounded px-3 py-2">
+      <input type="email" name="email" placeholder="Email" class="w-full border rounded px-3 py-2">
+      <input type="text" name="telephone_principal" placeholder="Téléphone principal" class="w-full border rounded px-3 py-2">
+      <input type="text" name="telephone_secondaire" placeholder="Téléphone secondaire" class="w-full border rounded px-3 py-2">
+      <input type="text" name="adresse_numero" placeholder="Adresse numéro" class="w-full border rounded px-3 py-2">
+
+      <select name="rue" class="w-full border rounded px-3 py-2">
+        {% for rue in rues %}
+          <option value="{{ rue.id }}">{{ rue.nom }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="abonnement" class="w-full border rounded px-3 py-2">
+        {% for abo in abonnements %}
+          <option value="{{ abo.id }}">{{ abo.nom }}</option>
+        {% endfor %}
+      </select>
+
+      <input type="number" name="montant_mensuel" placeholder="Montant mensuel" class="w-full border rounded px-3 py-2">
+      <input type="date" name="date_debut" class="w-full border rounded px-3 py-2">
+      <select name="date_recouvrement" class="w-full border rounded px-3 py-2">
+        <option value="5">5</option>
+        <option value="15">15</option>
+        <option value="30">30</option>
+      </select>
+
+      <select name="statut" class="w-full border rounded px-3 py-2">
+        <option value="Actif">Actif</option>
+        <option value="Suspendu">Suspendu</option>
+        <option value="Résilié">Résilié</option>
+      </select>
+
+      <textarea name="commentaires" placeholder="Commentaires" class="w-full border rounded px-3 py-2"></textarea>
+
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeAddClientModal()" class="px-3 py-2 bg-gray-300 rounded">Annuler</button>
+        <button type="submit" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700">Créer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modale Modifier Client -->
+<div id="editClientModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+    <h3 class="text-lg font-bold mb-4">✏️ Modifier client</h3>
+    <form id="editClientForm" method="post" class="space-y-3">
+      {% csrf_token %}
+      <input type="hidden" name="client_id" id="editClientId">
+
+      <input type="text" name="nom" id="editClientNom" class="w-full border rounded px-3 py-2">
+      <input type="text" name="prenom" id="editClientPrenom" class="w-full border rounded px-3 py-2">
+      <input type="email" name="email" id="editClientEmail" class="w-full border rounded px-3 py-2">
+      <input type="text" name="telephone_principal" id="editClientTel1" class="w-full border rounded px-3 py-2">
+      <input type="text" name="telephone_secondaire" id="editClientTel2" class="w-full border rounded px-3 py-2">
+      <input type="text" name="adresse_numero" id="editClientAdresse" class="w-full border rounded px-3 py-2">
+
+      <select name="rue" id="editClientRue" class="w-full border rounded px-3 py-2">
+        {% for rue in rues %}
+          <option value="{{ rue.id }}">{{ rue.nom }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="abonnement" id="editClientAbonnement" class="w-full border rounded px-3 py-2">
+        {% for abo in abonnements %}
+          <option value="{{ abo.id }}">{{ abo.nom }}</option>
+        {% endfor %}
+      </select>
+
+      <input type="number" name="montant_mensuel" id="editClientMontant" class="w-full border rounded px-3 py-2">
+      <input type="date" name="date_debut" id="editClientDebut" class="w-full border rounded px-3 py-2">
+
+      <select name="date_recouvrement" id="editClientRecouvrement" class="w-full border rounded px-3 py-2">
+        <option value="5">5</option>
+        <option value="15">15</option>
+        <option value="30">30</option>
+      </select>
+
+      <select name="statut" id="editClientStatut" class="w-full border rounded px-3 py-2">
+        <option value="Actif">Actif</option>
+        <option value="Suspendu">Suspendu</option>
+        <option value="Résilié">Résilié</option>
+      </select>
+
+      <textarea name="commentaires" id="editClientCommentaires" class="w-full border rounded px-3 py-2"></textarea>
+
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeEditClientModal()" class="px-3 py-2 bg-gray-300 rounded">Annuler</button>
+        <button type="submit" class="px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openAddClientModal() {
+  document.getElementById("addClientModal").classList.remove("hidden");
+  document.getElementById("addClientModal").classList.add("flex");
+}
+function closeAddClientModal() {
+  document.getElementById("addClientModal").classList.add("hidden");
+  document.getElementById("addClientModal").classList.remove("flex");
+}
+
+function openEditClientModal(id, nom, prenom, email, tel1, tel2, adresse, rueId, aboId, montant, debut, recouvrement, statut, commentaires) {
+  document.getElementById("editClientId").value = id;
+  document.getElementById("editClientNom").value = nom;
+  document.getElementById("editClientPrenom").value = prenom;
+  document.getElementById("editClientEmail").value = email;
+  document.getElementById("editClientTel1").value = tel1;
+  document.getElementById("editClientTel2").value = tel2;
+  document.getElementById("editClientAdresse").value = adresse;
+  document.getElementById("editClientRue").value = rueId;
+  document.getElementById("editClientAbonnement").value = aboId;
+  document.getElementById("editClientMontant").value = montant;
+  document.getElementById("editClientDebut").value = debut;
+  document.getElementById("editClientRecouvrement").value = recouvrement;
+  document.getElementById("editClientStatut").value = statut;
+  document.getElementById("editClientCommentaires").value = commentaires;
+
+  document.getElementById("editClientForm").action = "/clients/" + id + "/modifier/";
+  document.getElementById("editClientModal").classList.remove("hidden");
+  document.getElementById("editClientModal").classList.add("flex");
+}
+
+function closeEditClientModal() {
+  document.getElementById("editClientModal").classList.add("hidden");
+  document.getElementById("editClientModal").classList.remove("flex");
+}
+</script>
+{% endblock %}

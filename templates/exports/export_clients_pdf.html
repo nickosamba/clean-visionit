@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+{% load static %}
+<style>
+
+@page {
+    size: A4;
+    margin: 40px;
+}
+
+body {
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+}
+
+/* --- PAGE DE GARDE --- */
+.cover-banner {
+    width: 100%;
+    height: 80px;
+    background: #059669;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.cover {
+    text-align: center;
+    margin-top: 140px;
+    position: relative;
+}
+
+.cover img {
+    width: 150px;
+    margin-bottom: 20px;
+}
+
+.cover-title {
+    font-size: 32px;
+    color: #059669;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.cover-subtitle {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 40px;
+}
+
+.cover-info {
+    font-size: 15px;
+    color: #666;
+}
+
+
+/* Séparation entre les pages */
+.page-break {
+    page-break-after: always;
+}
+
+/* --- PAGE 2 : CONTENU --- */
+.content {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: space-between;
+}
+
+h1 {
+    text-align: center;
+    color: #059669;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+/* Tableau compact */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 12px;
+}
+
+th {
+    background: #059669;
+    color: white;
+    padding: 8px;
+    font-weight: bold;
+    text-align: left;
+}
+
+td {
+    padding: 6px;
+    border-bottom: 1px solid #ddd;
+    word-break: break-word;
+}
+
+tr:nth-child(even) {
+    background: #f6f6f6;
+}
+
+/* Signature */
+.signature-block {
+    margin-top: 40px;
+    text-align: right;
+    font-size: 14px;
+}
+
+.signature-line {
+    margin-top: 40px;
+    border-top: 1px solid #444;
+    width: 250px;
+    float: right;
+    text-align: center;
+    padding-top: 5px;
+}
+
+/* Footer */
+.footer {
+    margin-top: 60px;
+    text-align: center;
+    font-size: 11px;
+    color: #777;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- PAGE DE GARDE -->
+<div class="cover-banner"></div>
+
+<div class="cover">
+    <img src="{{ logo_path }}" alt="Logo CLEAN">
+
+    <div class="cover-title">Rapport des Agents</div>
+
+    <div class="cover-subtitle">Généré automatiquement par CLEAN</div>
+
+    <div class="cover-info">
+        Date : {{ date }} <br>
+        Gestionnaire : {{ gestionnaire }}
+    </div>
+</div>
+
+
+<div class="page-break"></div>
+
+<!-- PAGE 2 : TABLEAU -->
+<div class="content">
+
+    <h1>Liste des Clients</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Téléphone</th>
+                <th>Rue</th>
+                <th>Abon.</th>
+                <th>Montant</th>
+                <th>Éch.</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for c in clients %}
+            <tr>
+                <td>{{ c.nom }}</td>
+                <td>{{ c.prenom }}</td>
+                <td>{{ c.telephone_principal }}</td>
+
+                <td>{% if c.rue %}{{ c.rue.nom }}{% else %}-{% endif %}</td>
+
+                <td>{% if c.abonnement %}{{ c.abonnement.nom }}{% else %}-{% endif %}</td>
+
+                <td>{{ c.montant_mensuel }}</td>
+                <td>{{ c.date_recouvrement }}</td>
+                <td>{{ c.statut }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Signature -->
+    <!-- <div class="signature-block">
+        Fait à Brazzaville, le {{ now|date:"d/m/Y" }}
+        <div class="signature-line">
+            Signature du gestionnaire
+        </div>
+    </div> -->
+
+    <div class="footer">
+        CLEAN — Export PDF généré automatiquement
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Liste des Incidents — CLEAN{% endblock %}
+
+{% block extra_head %}
+<style>
+/* Animation fadeIn pour le titre */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+/* Animation fadeInRow pour les lignes du tableau et les cartes */
+@keyframes fadeInRow {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fadeInRow {
+  animation: fadeInRow 0.4s ease-out forwards;
+}
+
+/* Animation pulse pour bouton flottant */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+.pulse {
+  animation: pulse 2s infinite;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-emerald-600 animate-fadeIn">Incidents signalés</h1>
+
+    </div>
+
+    <!-- TABLEAU (PC) -->
+    <div class="hidden md:block bg-white shadow rounded-lg overflow-x-auto">
+        <table class="w-full min-w-[700px] border-collapse">
+            <thead>
+                <tr class="bg-emerald-600 text-white">
+                    <th class="p-3 text-left">ID</th>
+                    <th class="p-3 text-left">Type</th>
+                    <th class="p-3 text-left">Agent</th>
+                    <th class="p-3 text-left">Client</th>
+                    <th class="p-3 text-left">Date</th>
+                    <th class="p-3 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in incidents %}
+                <tr class="border-b hover:bg-gray-50 fadeInRow" style="animation-delay: {{ forloop.counter0|add:"0.1" }}s">
+                    <td class="p-3">{{ i.id }}</td>
+                    <td class="p-3">{{ i.type_incident }}</td>
+                    <td class="p-3">{{ i.agent.email }}</td>
+                    <td class="p-3">{{ i.client|default:"-" }}</td>
+                    <td class="p-3">{{ i.date_signalement|date:"d/m/Y H:i" }}</td>
+                    <td class="p-3 flex gap-3">
+                        <a href="{% url 'agents:detail_incident' i.id %}" class="text-emerald-600 hover:text-emerald-800">Détails</a>
+                        <a href="{% url 'agents:delete_incident' i.id %}" class="text-red-600 hover:text-red-800"
+                           onclick="return confirm('Supprimer cet incident ?');">Supprimer</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-4 text-center text-slate-500">Aucun incident enregistré.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- CARTES (MOBILE) -->
+    <div class="md:hidden grid grid-cols-1 gap-4">
+        {% for i in incidents %}
+        <div class="bg-white p-4 rounded-xl shadow border border-slate-200 fadeInRow" style="animation-delay: {{ forloop.counter0|add:"0.1" }}s">
+            <p><b>ID :</b> {{ i.id }}</p>
+            <p><b>Type :</b> {{ i.type_incident }}</p>
+            <p><b>Agent :</b> {{ i.agent.email }}</p>
+            <p><b>Client :</b> {{ i.client|default:"-" }}</p>
+            <p><b>Date :</b> {{ i.date_signalement|date:"d/m/Y H:i" }}</p>
+            <div class="flex justify-end gap-4 mt-3">
+                <a href="{% url 'agents:detail_incident' i.id %}" class="text-emerald-600 font-semibold">Détails</a>
+                <a href="{% url 'agents:delete_incident' i.id %}" class="text-red-600 font-semibold"
+                   onclick="return confirm('Supprimer cet incident ?');">Supprimer</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-slate-500">Aucun incident enregistré.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- BOUTON FLOTTANT animé -->
+{% endblock %}

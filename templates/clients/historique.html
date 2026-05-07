@@ -1,0 +1,41 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Historique des tarifs — CLEAN{% endblock %}
+
+{% block content %}
+
+<div class="p-6">
+
+    <h1 class="text-2xl font-bold text-emerald-600 mb-6">Historique des tarifs</h1>
+
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <table class="w-full border-collapse">
+            <thead>
+                <tr class="bg-slate-700 text-white">
+                    <th class="p-3 text-left">Abonnement</th>
+                    <th class="p-3 text-left">Ancien montant</th>
+                    <th class="p-3 text-left">Nouveau montant</th>
+                    <th class="p-3 text-left">Date</th>
+                    <th class="p-3 text-left">Note</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for h in historique %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3">{{ h.abonnement.nom }}</td>
+                    <td class="p-3">{{ h.ancien_montant|default:"-" }}</td>
+                    <td class="p-3">{{ h.nouveau_montant }}</td>
+                    <td class="p-3">{{ h.date_changement|date:"d/m/Y" }}</td>
+                    <td class="p-3">{{ h.note|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="p-4 text-center text-slate-500">Aucun historique trouvé.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+{% block title %}Modifier Agent — CLEAN{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-4 md:p-8">
+    <!-- En-tête -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-800">Modifier l'Agent</h1>
+            <p class="text-slate-500 mt-1">Mise à jour du profil de {{ agent.user.get_full_name }}</p>
+        </div>
+        <a href="{% url 'agents:detail_agent' agent.id %}" class="flex items-center text-slate-600 hover:text-emerald-600 transition-colors font-medium">
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Retour au profil
+        </a>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="bg-white rounded-3xl shadow-xl shadow-emerald-900/5 border border-emerald-50 overflow-hidden">
+        <form method="POST" enctype="multipart/form-data" class="divide-y divide-slate-100">
+            {% csrf_token %}
+
+            <!-- Section Photo & Identité -->
+            <div class="p-8 space-y-8">
+                <div class="flex flex-col md:flex-row items-center gap-8">
+                    <div class="relative group">
+                        <div class="w-32 h-32 rounded-3xl overflow-hidden bg-slate-100 border-4 border-white shadow-lg ring-1 ring-slate-200">
+                            {% if agent.photo_profile %}
+                                <img id="photoPreview" src="{{ agent.photo_profile.url }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <img id="photoPreview" class="w-full h-full object-cover hidden">
+                                <div id="photoPlaceholder" class="w-full h-full flex items-center justify-center text-emerald-600 font-bold text-3xl bg-emerald-50 uppercase">
+                                    {{ agent.user.first_name|first }}{{ agent.user.last_name|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <label for="photoInput" class="absolute -bottom-2 -right-2 bg-emerald-600 text-white p-2 rounded-xl shadow-lg cursor-pointer hover:bg-emerald-700 transition-transform hover:scale-110 active:scale-95">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <input type="file" name="photo_profile" id="photoInput" class="hidden" accept="image/*">
+                        </label>
+                    </div>
+                    <div class="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Prénom</label>
+                            <input type="text" name="first_name" value="{{ agent.user.first_name }}" required class="w-full px-4 py-3 rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom</label>
+                            <input type="text" name="last_name" value="{{ agent.user.last_name }}" required class="w-full px-4 py-3 rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Matricule</label>
+                        <input type="text" name="matricule" value="{{ agent.matricule }}" class="w-full px-4 py-3 rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 transition-all font-mono text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Secteur Affecté</label>
+                        <select name="secteur" required class="w-full px-4 py-3 rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 transition-all">
+                            {% for s in secteurs %}<option value="{{ s.id }}" {% if agent.secteur.id == s.id %}selected{% endif %}>{{ s.nom }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Téléphone Principal</label>
+                        <input type="text" name="telephone_principal" value="{{ agent.telephone_principal }}" required class="w-full px-4 py-3 rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Téléphone Secondaire</label>
+                        <input type="text" name="telephone_secondaire" value="{{ agent.telephone_secondaire }}" class="w-full px-4 py-3 rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Détails Professionnels -->
+            <div class="p-8 bg-slate-50/50 space-y-6">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    Informations Contractuelles
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Type de Contrat</label>
+                        <select name="type_contrat" required class="w-full px-4 py-3 rounded-xl border-slate-200 bg-white focus:border-emerald-500 focus:ring-emerald-500 transition-all">
+                            {% for value, label in agent.Contrat.choices %}<option value="{{ value }}" {% if agent.type_contrat == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date d'Embauche</label>
+                        <input type="date" name="date_embauche" value="{{ agent.date_embauche|date:'Y-m-d' }}" class="w-full px-4 py-3 rounded-xl border-slate-200 bg-white focus:border-emerald-500 focus:ring-emerald-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Salaire de Base (FCFA)</label>
+                        <input type="number" name="salaire_base" value="{{ agent.salaire_base|floatformat:0 }}" class="w-full px-4 py-3 rounded-xl border-slate-200 bg-white focus:border-emerald-500 focus:ring-emerald-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Statut</label>
+                        <select name="statut" class="w-full px-4 py-3 rounded-xl border-slate-200 bg-white focus:border-emerald-500 focus:ring-emerald-500 transition-all">
+                            {% for value, label in agent.Statut.choices %}<option value="{{ value }}" {% if agent.statut == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pied du formulaire -->
+            <div class="p-8 bg-white flex flex-col md:flex-row gap-4">
+                <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-200 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Enregistrer les modifications
+                </button>
+                <a href="{% url 'agents:detail_agent' agent.id %}" class="md:w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-4 rounded-2xl transition-all flex items-center justify-center">
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('photoInput').addEventListener('change', function(e) {
+        const [file] = e.target.files;
+        if (file) {
+            const preview = document.getElementById('photoPreview');
+            const placeholder = document.getElementById('photoPlaceholder');
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+            if(placeholder) placeholder.classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}

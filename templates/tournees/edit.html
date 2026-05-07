@@ -1,0 +1,92 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Modifier la tournée — CLEAN{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-6">
+
+    <h1 class="text-2xl font-bold text-emerald-600 mb-6">Modifier la tournée {{ tournee.id }}</h1>
+
+    <form method="POST" class="space-y-5 bg-white p-6 rounded-lg shadow">
+        {% csrf_token %}
+
+        <!-- Date -->
+        <div>
+            <label class="font-semibold">Date de la tournée</label>
+            <input type="date" name="date" value="{{ tournee.date|date:'Y-m-d' }}"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg 
+                          focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required>
+        </div>
+
+        <!-- Secteur -->
+        <div>
+            <label class="font-semibold">Secteur</label>
+            <select name="secteur"
+                    class="w-full px-4 py-2 border border-slate-300 rounded-lg 
+                           focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required>
+                {% for s in secteurs %}
+                    <option value="{{ s.id }}" {% if s.id == tournee.secteur.id %}selected{% endif %}>
+                        {{ s.code }} - {{ s.nom }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Agent -->
+        <div>
+            <label class="font-semibold">Agent</label>
+            <select name="agent"
+                    class="w-full px-4 py-2 border border-slate-300 rounded-lg 
+                           focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required>
+                {% for a in agents %}
+                    <option value="{{ a.id }}" {% if a.id == tournee.agent.id %}selected{% endif %}>
+                        {{ a.user.first_name }} {{ a.user.last_name }} ({{ a.user.email }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Statut -->
+        <div>
+            <label class="font-semibold">Statut</label>
+            <select name="statut"
+                    class="w-full px-4 py-2 border border-slate-300 rounded-lg 
+                           focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                {% for key, value in tournee.Statut.choices %}
+                    <option value="{{ key }}" {% if tournee.statut == key %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Horaires -->
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="font-semibold">Heure début</label>
+                <input type="time" name="heure_debut" value="{{ tournee.heure_debut|time:'H:i' }}"
+                       class="w-full px-4 py-2 border border-slate-300 rounded-lg 
+                              focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+            </div>
+            <div>
+                <label class="font-semibold">Heure fin</label>
+                <input type="time" name="heure_fin" value="{{ tournee.heure_fin|time:'H:i' }}"
+                       class="w-full px-4 py-2 border border-slate-300 rounded-lg 
+                              focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+            </div>
+        </div>
+
+        <!-- Véhicule -->
+        <div>
+            <label class="font-semibold">Véhicule</label>
+            <input type="text" name="vehicule" value="{{ tournee.vehicule }}"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg 
+                          focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+        </div>
+
+        <!-- Bouton -->
+        <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
+            Mettre à jour
+        </button>
+    </form>
+
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Clients de la tournée — CLEAN{% endblock %}
+
+{% block content %}
+<div class="p-6">
+
+    <!-- 🔔 Messages Django -->
+    {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+                <div class="p-4 rounded-lg
+                    {% if message.tags == 'success' %} bg-emerald-100 text-emerald-700
+                    {% elif message.tags == 'error' %} bg-red-100 text-red-700
+                    {% else %} bg-slate-100 text-slate-700 {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- En-tête -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-emerald-600">
+                Clients de la tournée {{ tournee.id }} ({{ tournee.date }})
+            </h1>
+            <p class="text-slate-500">Secteur : <span class="font-bold text-slate-700">{{ tournee.secteur.nom }}</span></p>
+        </div>
+        
+        <div class="flex flex-wrap gap-3">
+            <form action="{% url 'tournees:add_sector_clients' tournee.id %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+                        onclick="return confirm('Ajouter tous les clients actifs du secteur {{ tournee.secteur.nom }} non encore planifiés aujourd\'hui ?');">
+                    <i data-lucide="users"></i> Importer tout le secteur
+                </button>
+            </form>
+
+            <a href="{% url 'tournees:add_client' tournee.id %}"
+               class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2">
+                <i data-lucide="plus"></i> Ajouter un client
+            </a>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <table class="w-full border-collapse">
+            <thead>
+                <tr class="bg-emerald-600 text-white">
+                    <th class="p-3 text-left">Code Client</th>
+                    <th class="p-3 text-left">Nom</th>
+                    <th class="p-3 text-left">Statut Service</th>
+                    <th class="p-3 text-left">Heure Passage</th>
+                    <th class="p-3 text-left">Commentaires</th>
+                    <th class="p-3 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tc in clients %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3">{{ tc.client.code_client }}</td>
+                    <td class="p-3">{{ tc.client.nom }}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded-lg text-sm 
+                                     {% if tc.statut_service == 'Servi' %}bg-emerald-100 text-emerald-700
+                                     {% elif tc.statut_service == 'Absent' %}bg-yellow-100 text-yellow-700
+                                     {% elif tc.statut_service == 'Problème signalé' %}bg-red-100 text-red-700
+                                     {% else %}bg-slate-100 text-slate-700{% endif %}">
+                            {{ tc.statut_service }}
+                        </span>
+                    </td>
+                    <td class="p-3">
+                        {% if tc.heure_passage %}
+                            {{ tc.heure_passage }}
+                        {% else %}
+                            <span class="text-slate-500">Non défini</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-3">{{ tc.commentaires_agent|default:"-" }}</td>
+                    <td class="p-3 flex gap-3">
+                        <a href="{% url 'tournees:edit_client' tc.id %}" 
+                           class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                            <i data-lucide="pencil"></i> Modifier
+                        </a>
+                        <a href="{% url 'tournees:delete_client' tc.id %}" 
+                           class="text-red-600 hover:text-red-800 flex items-center gap-1"
+                           onclick="return confirm('Supprimer ce client de la tournée ?');">
+                            <i data-lucide="trash"></i> Supprimer
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-4 text-center text-slate-500">
+                        Aucun client associé à cette tournée.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- Include notification script -->
+<script src="{% static 'js/tournee-notifications.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Check for success messages and trigger notification
+    const successMessages = document.querySelectorAll('.bg-emerald-100.text-emerald-700');
+    if (successMessages.length > 0) {
+        // Find the success message that contains "Client ajouté"
+        for (let message of successMessages) {
+            if (message.textContent.includes('Client ajouté')) {
+                // Extract client name and tournee info from the message
+                const messageText = message.textContent;
+                const clientMatch = messageText.match(/Client ([^ ]+) ajouté/);
+                const tourneeMatch = messageText.match(/tournée #([0-9]+)/);
+                const dateMatch = messageText.match(/le ([^.]*)\./);
+
+                if (clientMatch && tourneeMatch && dateMatch) {
+                    const clientName = clientMatch[1];
+                    const tourneeId = tourneeMatch[1];
+                    const date = dateMatch[1];
+
+                    // Trigger the notification
+                    if (typeof triggerTourneeClientNotification === 'function') {
+                        triggerTourneeClientNotification(`Client ${clientName} ajouté à la tournée #${tourneeId}`, date);
+                    }
+                }
+                break;
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

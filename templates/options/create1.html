@@ -1,0 +1,18 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Créer une option{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto p-6">
+    <h1 class="text-2xl font-bold text-emerald-600 mb-6">➕ Créer une option</h1>
+
+    <form method="POST" class="space-y-5 bg-white p-6 rounded-lg shadow">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit"
+                class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
+            Enregistrer
+        </button>
+    </form>
+</div>
+{% endblock %}
