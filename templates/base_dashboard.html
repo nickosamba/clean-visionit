@@ -138,6 +138,27 @@
     </header>
 
     <div class="p-4 sm:p-6 lg:p-8 animate-fadeIn">
+      <!-- ✅ Affichage des messages Django -->
+      {% if messages %}
+        <div class="mb-6 space-y-3">
+          {% for message in messages %}
+            <div class="p-4 rounded-xl flex items-center gap-3 shadow-sm border
+              {% if message.tags == 'success' %} bg-emerald-50 border-emerald-200 text-emerald-800
+              {% elif message.tags == 'error' %} bg-red-50 border-red-200 text-red-800
+              {% elif message.tags == 'warning' %} bg-amber-50 border-amber-200 text-amber-800
+              {% else %} bg-blue-50 border-blue-200 text-blue-800 {% endif %}">
+              
+              {% if message.tags == 'success' %} <i data-lucide="check-circle" class="w-5 h-5"></i>
+              {% elif message.tags == 'error' %} <i data-lucide="alert-circle" class="w-5 h-5"></i>
+              {% elif message.tags == 'warning' %} <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+              {% else %} <i data-lucide="info" class="w-5 h-5"></i> {% endif %}
+
+              <span class="font-medium">{{ message }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
       {% block content %}{% endblock %}
     </div>
   </main>

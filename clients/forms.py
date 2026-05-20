@@ -88,6 +88,7 @@ class ClientForm(forms.ModelForm):
             "adresse_numero",
             "rue",
             "abonnement",
+            "montant_mensuel",
             "date_debut",
             "date_recouvrement",
             "statut",
@@ -97,7 +98,7 @@ class ClientForm(forms.ModelForm):
             "options",
         ]
 
-        base_input = "w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+        base_input = "w-full px-4 py-3 rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 transition-all"
 
         widgets = {
             "prenom": forms.TextInput(attrs={"class": base_input}),
@@ -108,10 +109,11 @@ class ClientForm(forms.ModelForm):
             "adresse_numero": forms.TextInput(attrs={"class": base_input}),
             "rue": forms.Select(attrs={"class": base_input}),
             "abonnement": forms.Select(attrs={"class": base_input}),
+            "montant_mensuel": forms.NumberInput(attrs={"class": base_input, "placeholder": "Calculé automatiquement"}),
             "date_debut": forms.DateInput(attrs={"class": base_input, "type": "date"}, format="%Y-%m-%d"),
             "date_recouvrement": forms.DateInput(attrs={"class": base_input, "type": "date"}, format="%Y-%m-%d"),
             "statut": forms.Select(attrs={"class": base_input}),
-            "commentaires": forms.Textarea(attrs={"class": base_input}),
+            "commentaires": forms.Textarea(attrs={"class": base_input, "rows": 3}),
             "gps_lat": forms.NumberInput(attrs={"class": base_input}),
             "gps_lon": forms.NumberInput(attrs={"class": base_input}),
         }
@@ -120,6 +122,15 @@ class ClientForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["date_debut"].input_formats = ["%Y-%m-%d"]
         self.fields["date_recouvrement"].input_formats = ["%Y-%m-%d"]
+        
+        # Champs obligatoires pour le métier
+        self.fields["rue"].required = True
+        self.fields["abonnement"].required = True
+        self.fields["date_recouvrement"].required = True
+
+        # Le montant est calculé automatiquement, on ne le rend pas obligatoire
+        if "montant_mensuel" in self.fields:
+            self.fields["montant_mensuel"].required = False
 
     def save(self, commit=True):
         client = super().save(commit=commit)
