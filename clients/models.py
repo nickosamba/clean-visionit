@@ -12,7 +12,7 @@ class Client(models.Model):
         SUSPENDU = "Suspendu", "Suspendu"
         RESILIE = "Résilié", "Résilié"
 
-    code_client = models.CharField(max_length=50, unique=True, blank=True)
+    code_client = models.CharField(max_length=50, unique=True, blank=True, null=True)
     prenom = models.CharField(max_length=100, blank=True, null=True)
     nom = models.CharField(max_length=100)
     email = models.EmailField(blank=True, null=True, validators=[EmailValidator(message="Veuillez entrer un email valide")])
