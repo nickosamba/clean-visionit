@@ -848,29 +848,13 @@ def payer_echeance(request, echeance_id):
             date_paiement=timezone.now()
         )
 
-        # ✅ Vérifier la somme des paiements liés
-        total_paye = Paiement.objects.filter(echeance=echeance).aggregate(
-            Sum("montant_paye")
-        )["montant_paye__sum"] or Decimal(0)
-
-        if total_paye >= echeance.montant_du:
-            echeance.statut = Echeance.Statut.PAYE
-        else:
-            echeance.statut = Echeance.Statut.A_PAYER
-        echeance.save()
+        # ✅ Le statut de l'échéance et la génération du reçu 
+        # sont gérés automatiquement par Paiement.save() et les signaux.
 
         # ✅ Paiement en retard
         if echeance.date_echeance and timezone.now().date() > echeance.date_echeance:
             paiement.notes = "Paiement effectué en retard"
-            paiement.save()
-
-        # ✅ Générer automatiquement un reçu lié
-        Recu.objects.create(
-            paiement=paiement,
-            numero_recu=f"REC-{timezone.now().strftime('%Y%m%d')}-{paiement.id}",
-            signature_comptable="Comptable CLEAN",
-            fichier_url=f"/media/recus/REC-{paiement.id}.pdf"
-        )
+            paiement.save(update_fields=["notes"])
 
         messages.success(request, f"Paiement de {montant} FCFA enregistré avec succès.")
         return redirect("dashboard:paiements")

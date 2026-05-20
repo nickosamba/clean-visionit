@@ -134,6 +134,16 @@ def client_create(request):
         form = ClientForm(request.POST)
         if form.is_valid():
             client = form.save()  # 🔥 Client + Options + montant mensuel gérés dans le form
+            
+            # 🔒 AuditLog
+            AuditLog.objects.create(
+                utilisateur=request.user,
+                action="Création",
+                entite="Client",
+                entite_id=client.id,
+                details=f"Création du client {client.nom} {client.prenom}"
+            )
+            
             return redirect("clients:liste")
     else:
         form = ClientForm()
@@ -149,6 +159,16 @@ def client_update(request, id):
         form = ClientForm(request.POST, instance=client)
         if form.is_valid():
             client = form.save()  # 🔥 tout est géré dans le form
+            
+            # 🔒 AuditLog
+            AuditLog.objects.create(
+                utilisateur=request.user,
+                action="Modification",
+                entite="Client",
+                entite_id=client.id,
+                details=f"Modification du client {client.nom} {client.prenom}"
+            )
+            
             return redirect("clients:details", id=id)
     else:
         # Pré-remplir les options déjà liées au client
@@ -160,12 +180,25 @@ def client_update(request, id):
         "client": client
     })
 
-
+@gestionnaire_required
+@login_required
 def client_delete(request, id):
     client = get_object_or_404(Client, id=id)
 
     if request.method == "POST":
+        client_id = client.id
+        client_info = f"{client.nom} {client.prenom}"
         client.delete()
+        
+        # 🔒 AuditLog
+        AuditLog.objects.create(
+            utilisateur=request.user,
+            action="Suppression",
+            entite="Client",
+            entite_id=client_id,
+            details=f"Suppression du client {client_info}"
+        )
+        
         return redirect("clients:liste")
 
     return render(request, "clients/supprimer.html", {"client": client})
@@ -269,8 +302,19 @@ from weasyprint import HTML
 from .models import Client
 from django.utils import timezone
 
+@gestionnaire_required
+@login_required
 def exporter_pdf_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
+
+    # 🔒 AuditLog
+    AuditLog.objects.create(
+        utilisateur=request.user,
+        action="Exportation PDF",
+        entite="Client",
+        entite_id=client.id,
+        details=f"Exportation de la fiche PDF du client {client.nom} {client.prenom}"
+    )
 
     html_string = render_to_string("exports/pdf_client.html", {
         "client": client,

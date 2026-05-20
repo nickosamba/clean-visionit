@@ -39,6 +39,17 @@ def create_abonnement(request):
             description=request.POST.get("description"),
             avantages=request.POST.get("avantages"),
         )
+        
+        # 🔒 AuditLog
+        from accounts.models import AuditLog
+        AuditLog.objects.create(
+            utilisateur=request.user,
+            action="Création",
+            entite="Abonnement",
+            entite_id=abonnement.id,
+            details=f"Création de l'abonnement {abonnement.nom}"
+        )
+        
         return redirect("abonnements:liste")
 
     return render(request, "abonnements/create.html")
@@ -60,7 +71,7 @@ def edit_abonnement(request, id):
         abonnement.save()
 
         # Si le montant change → on crée un historique
-        if str(ancien_montant) != str(abonnement.montant_base):
+        if Decimal(str(ancien_montant)) != Decimal(str(abonnement.montant_base)):
             TarifHistorique.objects.create(
                 abonnement=abonnement,
                 ancien_montant=ancien_montant,
@@ -68,6 +79,16 @@ def edit_abonnement(request, id):
                 date_changement=timezone.now().date(),
                 note="Modification du montant"
             )
+
+        # 🔒 AuditLog
+        from accounts.models import AuditLog
+        AuditLog.objects.create(
+            utilisateur=request.user,
+            action="Modification",
+            entite="Abonnement",
+            entite_id=abonnement.id,
+            details=f"Modification de l'abonnement {abonnement.nom}"
+        )
 
         return redirect("abonnements:detail", abonnement.id)
 
@@ -94,7 +115,20 @@ def delete_abonnement(request, id):
     abonnement = get_object_or_404(Abonnement, id=id)
 
     if request.method == "POST":
+        abonnement_id = abonnement.id
+        abonnement_nom = abonnement.nom
         abonnement.delete()
+        
+        # 🔒 AuditLog
+        from accounts.models import AuditLog
+        AuditLog.objects.create(
+            utilisateur=request.user,
+            action="Suppression",
+            entite="Abonnement",
+            entite_id=abonnement_id,
+            details=f"Suppression de l'abonnement {abonnement_nom}"
+        )
+        
         messages.success(request, "Abonnement supprimé avec succès.")
         return redirect("abonnements:liste")
     
@@ -195,6 +229,21 @@ def edit_option(request, id):
 @login_required
 def delete_option(request, id):
     option = get_object_or_404(OptionService, id=id)
-    abonnement_id = option.abonnement.id  # garder l’ID pour redirection
+    abonnement_id = option.abonnement.id if option.abonnement else None
+    option_nom = option.nom
+    option_id = option.id
     option.delete()
-    return redirect("abonnements:detail", abonnement_id)
+    
+    # 🔒 AuditLog
+    from accounts.models import AuditLog
+    AuditLog.objects.create(
+        utilisateur=request.user,
+        action="Suppression",
+        entite="OptionService",
+        entite_id=option_id,
+        details=f"Suppression de l'option {option_nom}"
+    )
+
+    if abonnement_id:
+        return redirect("abonnements:detail", abonnement_id)
+    return redirect("abonnements:liste_options")

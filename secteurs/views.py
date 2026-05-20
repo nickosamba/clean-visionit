@@ -32,7 +32,18 @@ def create_secteur(request):
     if request.method == "POST":
         form = SecteurForm(request.POST)
         if form.is_valid():
-            form.save()
+            secteur = form.save()
+            
+            # 🔒 AuditLog
+            from accounts.models import AuditLog
+            AuditLog.objects.create(
+                utilisateur=request.user,
+                action="Création",
+                entite="Secteur",
+                entite_id=secteur.id,
+                details=f"Création du secteur {secteur.nom}"
+            )
+            
             return redirect("secteurs:liste")
     else:
         form = SecteurForm(initial={"ville": "Brazzaville", "pays": "Congo"})
@@ -46,6 +57,17 @@ def edit_secteur(request, id):
         form = SecteurForm(request.POST, instance=secteur)
         if form.is_valid():
             form.save()
+            
+            # 🔒 AuditLog
+            from accounts.models import AuditLog
+            AuditLog.objects.create(
+                utilisateur=request.user,
+                action="Modification",
+                entite="Secteur",
+                entite_id=secteur.id,
+                details=f"Modification du secteur {secteur.nom}"
+            )
+            
             return redirect("secteurs:liste")
     else:
         form = SecteurForm(instance=secteur)
@@ -68,8 +90,23 @@ def detail_secteur(request, id):
 @login_required
 def delete_secteur(request, id):
     secteur = get_object_or_404(Secteur, id=id)
-    secteur.delete()
-    return redirect("secteurs:liste")
+    if request.method == "POST":
+        secteur_id = secteur.id
+        secteur_nom = secteur.nom
+        secteur.delete()
+        
+        # 🔒 AuditLog
+        from accounts.models import AuditLog
+        AuditLog.objects.create(
+            utilisateur=request.user,
+            action="Suppression",
+            entite="Secteur",
+            entite_id=secteur_id,
+            details=f"Suppression du secteur {secteur_nom}"
+        )
+        
+        return redirect("secteurs:liste")
+    return render(request, "secteurs/secteur_delete_confirm.html", {"secteur": secteur})
 
 
 # --- RUES ---
@@ -90,7 +127,6 @@ def liste_rues(request):
     }
     return render(request, "secteurs/liste_rues.html", context)
 
-
 @gestionnaire_required
 @login_required
 def create_rue(request, secteur_id):
@@ -101,6 +137,17 @@ def create_rue(request, secteur_id):
             rue = form.save(commit=False)
             rue.secteur = secteur
             rue.save()
+            
+            # 🔒 AuditLog
+            from accounts.models import AuditLog
+            AuditLog.objects.create(
+                utilisateur=request.user,
+                action="Création",
+                entite="Rue",
+                entite_id=rue.id,
+                details=f"Création de la rue {rue.nom} dans {secteur.nom}"
+            )
+            
             return redirect("secteurs:liste_rues")
     else:
         form = RueForm(initial={"secteur": secteur})
@@ -115,6 +162,17 @@ def edit_rue(request, id):
         form = RueForm(request.POST, instance=rue)
         if form.is_valid():
             form.save()
+            
+            # 🔒 AuditLog
+            from accounts.models import AuditLog
+            AuditLog.objects.create(
+                utilisateur=request.user,
+                action="Modification",
+                entite="Rue",
+                entite_id=rue.id,
+                details=f"Modification de la rue {rue.nom}"
+            )
+            
             return redirect("secteurs:liste_rues")
     else:
         form = RueForm(instance=rue)
@@ -124,8 +182,23 @@ def edit_rue(request, id):
 @login_required
 def delete_rue(request, id):
     rue = get_object_or_404(Rue, id=id)
-    rue.delete()
-    return redirect("secteurs:liste_rues")
+    if request.method == "POST":
+        rue_id = rue.id
+        rue_nom = rue.nom
+        rue.delete()
+        
+        # 🔒 AuditLog
+        from accounts.models import AuditLog
+        AuditLog.objects.create(
+            utilisateur=request.user,
+            action="Suppression",
+            entite="Rue",
+            entite_id=rue_id,
+            details=f"Suppression de la rue {rue_nom}"
+        )
+        
+        return redirect("secteurs:liste_rues")
+    return render(request, "secteurs/rue_delete_confirm.html", {"rue": rue})
 
 @gestionnaire_required
 @login_required
@@ -133,7 +206,18 @@ def create_rue_global(request):
     if request.method == "POST":
         form = RueForm(request.POST)
         if form.is_valid():
-            form.save()
+            rue = form.save()
+            
+            # 🔒 AuditLog
+            from accounts.models import AuditLog
+            AuditLog.objects.create(
+                utilisateur=request.user,
+                action="Création",
+                entite="Rue",
+                entite_id=rue.id,
+                details=f"Création globale de la rue {rue.nom}"
+            )
+            
             return redirect("secteurs:liste_rues")
     else:
         form = RueForm()

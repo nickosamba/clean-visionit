@@ -61,25 +61,37 @@ class Client(models.Model):
         return base + options_total
 
     def save(self, *args, **kwargs):
-        creating = self.pk is None
-        super().save(*args, **kwargs)
+        is_new = self.pk is None
 
-        # ⚡ Calculer le montant mensuel seulement après la création
-        if self.abonnement and self.pk:
-            montant = self.calculer_montant_mensuel()
-            if self.montant_mensuel != montant:
-                self.montant_mensuel = montant
-                super().save(update_fields=["montant_mensuel"])
-
-        if creating and not self.code_client:
-            base = (self.nom[:8]).upper()
-            self.code_client = f"{base}-{self.id}"
-            super().save(update_fields=["code_client"])
-
-        if self.rue and (not self.gps_lat or not self.gps_lon):
+        # 1. Pré-remplissage des coordonnées GPS depuis la rue si absentes
+        if self.rue and (self.gps_lat is None or self.gps_lon is None):
             self.gps_lat = self.rue.gps_lat
             self.gps_lon = self.rue.gps_lon
-            super().save(update_fields=["gps_lat", "gps_lon"])
+
+        # 2. Sauvegarde initiale
+        super().save(*args, **kwargs)
+
+        # 3. Traitements post-sauvegarde nécessitant un ID
+        update_needed = False
+        update_fields = []
+
+        if is_new and not self.code_client:
+            base = (self.nom[:8]).upper()
+            self.code_client = f"{base}-{self.id}"
+            update_fields.append("code_client")
+            update_needed = True
+
+        # Le montant mensuel peut dépendre des options (ClientOption) 
+        # qui ne sont pas forcément présentes à la création,
+        # mais on fait un calcul initial ici si nécessaire.
+        nouveau_montant = self.calculer_montant_mensuel()
+        if self.montant_mensuel != nouveau_montant:
+            self.montant_mensuel = nouveau_montant
+            update_fields.append("montant_mensuel")
+            update_needed = True
+
+        if update_needed:
+            super().save(update_fields=update_fields)
 
 
 class ClientOption(models.Model):

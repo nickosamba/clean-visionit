@@ -65,7 +65,7 @@ def liste_tournees(request):
 def create_tournee(request):
     secteurs = Secteur.objects.all()
     agents = Agent.objects.all()
-    statut_choices = Tournee.Statut.choices   # 👈 on récupère les choix
+    statut_choices = Tournee.Statut.choices
 
     if request.method == "POST":
         secteur = get_object_or_404(Secteur, id=request.POST["secteur"])
@@ -80,7 +80,16 @@ def create_tournee(request):
             vehicule=request.POST.get("vehicule")
         )
 
-        # Add a success message that will be used to trigger the notification
+        # 🔒 AuditLog
+        from accounts.models import AuditLog
+        AuditLog.objects.create(
+            utilisateur=request.user,
+            action="Création",
+            entite="Tournee",
+            entite_id=tournee.id,
+            details=f"Création de la tournée #{tournee.id} pour {agent.user.first_name} le {tournee.date}"
+        )
+
         from django.contrib import messages
         messages.success(request, f'Tournee créée avec succès pour l\'agent {agent.user.first_name} {agent.user.last_name} le {tournee.date}.')
         return redirect("tournees:tournees")
@@ -88,7 +97,7 @@ def create_tournee(request):
     return render(request, "tournees/create.html", {
         "secteurs": secteurs,
         "agents": agents,
-        "statut_choices": statut_choices   # 👈 on envoie au template
+        "statut_choices": statut_choices
     })
 
 @gestionnaire_required
@@ -106,6 +115,17 @@ def edit_tournee(request, id):
         tournee.heure_fin = request.POST.get("heure_fin") or None
         tournee.vehicule = request.POST.get("vehicule")
         tournee.save()
+
+        # 🔒 AuditLog
+        from accounts.models import AuditLog
+        AuditLog.objects.create(
+            utilisateur=request.user,
+            action="Modification",
+            entite="Tournee",
+            entite_id=tournee.id,
+            details=f"Modification de la tournée #{tournee.id}"
+        )
+
         return redirect("tournees:tournees")
     return render(request, "tournees/edit.html", {"tournee": tournee, "secteurs": secteurs, "agents": agents})
 
@@ -113,8 +133,22 @@ def edit_tournee(request, id):
 @login_required
 def delete_tournee(request, id):
     tournee = get_object_or_404(Tournee, id=id)
-    tournee.delete()
-    return redirect("tournees:tournees")
+    if request.method == "POST":
+        tournee_id = tournee.id
+        tournee.delete()
+        
+        # 🔒 AuditLog
+        from accounts.models import AuditLog
+        AuditLog.objects.create(
+            utilisateur=request.user,
+            action="Suppression",
+            entite="Tournee",
+            entite_id=tournee_id,
+            details=f"Suppression de la tournée #{tournee_id}"
+        )
+        
+        return redirect("tournees:tournees")
+    return render(request, "tournees/tournee_delete_confirm.html", {"tournee": tournee})
 
 
 @gestionnaire_required

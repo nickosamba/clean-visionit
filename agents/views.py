@@ -364,13 +364,15 @@ def liste_incidents(request):
     incidents = Incident.objects.select_related("agent", "client").all().order_by("-date_signalement")
     return render(request, "agents/list_incidents.html", {"incidents": incidents})
 
-# Supprimer un 
 @gestionnaire_required
 @login_required
 def delete_incident(request, id):
     incident = get_object_or_404(Incident, id=id)
-    incident.delete()
-    return redirect("agents:liste_incidents")
+    if request.method == "POST":
+        incident.delete()
+        messages.success(request, "Incident supprimé.")
+        return redirect("agents:liste_incidents")
+    return render(request, "agents/incident_delete_confirm.html", {"incident": incident})
 
 # Détail d’un incident
 @gestionnaire_required
@@ -387,6 +389,8 @@ from weasyprint import HTML
 from .models import Agent
 from django.utils import timezone
 
+@gestionnaire_required
+@login_required
 def exporter_pdf_agent(request, agent_id):
     agent = get_object_or_404(Agent, id=agent_id)
 
